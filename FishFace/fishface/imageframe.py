@@ -107,9 +107,7 @@ class Frame:
         cv.Canny(self.cvmat, out, 50, 100, 3)
         
         if thickenEdges:
-            se = cv.CreateStructuringElementEx(2*thickener+1, 2*thickener+1,
-                                                thickener, thickener,
-                                                 cv.CV_SHAPE_ELLIPSE)
+            se = self.slider(thickener, shape="circle")
             cv.Dilate(out,out,se)
         
         if returnMat:
@@ -121,16 +119,7 @@ class Frame:
         return self.__copy__()
 
     def copy(self):
-        return self.__deepcopy__(memodic=None)
-
-    def __copy__(self):
-        newFrame = Frame(self.cvmat)
-        return newFrame
-
-    def __deepcopy__(self, memodic):
-        newFrame = Frame(self.blankCopy())
-        cv.Copy(self.cvmat, newFrame.cvmat)
-        return newFrame
+        return self.__deepcopy__()
 
     def blankCopy(self, mode=None):
         if mode=="RGB":
@@ -172,7 +161,7 @@ class Frame:
             self.cvmat = out
             return None
                    
-    def grayImage(self, returnMat=False, method=0):
+    def grayImage(self, returnMat=False):
         """If my image is grayscale, return it.  Otherwise, convert to grayscale
         and store/return the result."""
         if self.cvmat.channels==1:
@@ -191,11 +180,55 @@ class Frame:
                 return None
         else:
             raise ImageProcessError("Image did not have either 1 or 3 channels. Can't convert to grayscale.") 
+
+    def slider(self, radius=3, shape="circ"):
+        if shape=="circ":
+            shp = cv.CV_SHAPE_ELLIPSE
+        elif shape=="cross":
+            shp = cv.CV_SHAPE_RECT
+        elif shape=="rect":        
+            shp = cv.CV_SHAPE_RECT
+        else:
+            raise ImageProcessError("Couldn't create a slider with shape: {}".format(shape))
+        return cv.CreateStructuringElementEx(radius*2+1, radius*2+1,
+                                            radius, radius,
+                                            shp)
                 
-    def findLargestObject(self):
-        pass
+    def findLargestObject(self, returnMat=False, sliderRadius=3, iterClosing=2, iterOpening=3):
+        #out = self.blankCopy()
+        #cv.Copy(self.cvmat, out)
+        
+        out = self.cvmat
 
+        # dilation followed by erosion fills in holes
+        # this process is called closing
+        se = self.slider(sliderRadius)
+        cv.Dilate(out, out, se, iterClosing)        
+        cv.Erode(out,out, se, iterClosing)
+        
+        # erosion followed by dilation removes smaller objects
+        # this process is called opening
+        se = self.slider(sliderRadius)
+        cv.Erode(out,out, se, iterOpening)
+        cv.Dilate(out, out, se, iterOpening)
+    
+        contours = cv.FindContours(out,cv.CreateMemStorage(),mode=cv.CV_RETR_EXTERNAL)
+        
+        ctr = contours
+        
+        print len(ctr)
+        while(ctr.h_next()!=None):
+            print len(ctr)
+            ctr = ctr.h_next()
+        
+    def __copy__(self):
+        newFrame = Frame(self.cvmat)
+        return newFrame
 
+    def __deepcopy__(self, memodic=None):
+        newFrame = Frame(self.blankCopy())
+        cv.Copy(self.cvmat, newFrame.cvmat)
+        return newFrame
 
 
 class ImageInitError(Exception):
