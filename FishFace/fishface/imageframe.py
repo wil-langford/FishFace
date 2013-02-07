@@ -16,21 +16,21 @@ class Frame:
         self.setImage(image)
         self.mask = None
     
-    def setImage(self, image, copyImage=False):
+    def setImage(self, image, copyCvMat=False):
         """Object is getting a new image.  If it's already an OpenCV Mat,
         just store it.  Otherwise, try to convert it from numpy.array or
         load it from a filename string."""
         
         # Depending on file type, use various initializers
         if (type(image)==cv.cvmat):
-            if copyImage:
+            if copyCvMat:
                 self.cvmat = cv.CreateMat(image.rows,image.cols,image.type)
                 cv.Copy(image, self.cvmat)
             else:
                 self.cvmat = image
 
         elif(type(image)==np.ndarray):
-            self.setImageFromNumpyArray(image)
+            self.fromarray(image)
 
         elif(type(image)==str):
             self.setImageFromFile(image)
@@ -47,7 +47,7 @@ class Frame:
         else:
             raise ImageInitError("File not found: {}".format(filename))
 
-    def setImageFromNumpyArray(self,image):
+    def fromarray(self,image):
         """Convert Numpy array to CvMat."""
         if image.dtype==np.uint8:
             self.cvmat = cv.fromarray(image)
@@ -69,15 +69,21 @@ class Frame:
         
         root.bind("<Button>", kill_window)
         
-        fmts = ["L","RGB"]
-        im = Image.fromstring(
-                              fmts[self.cvmat.channels-2],
-                              cv.GetSize(self.cvmat),
-                              self.cvmat.tostring(),
-                              "raw",
-                              "BGR",
-                              self.cvmat.width*3,
-                              0
+        if self.cvmat.channels==3:
+            im = Image.fromstring(
+                                  'RGB',
+                                  cv.GetSize(self.cvmat),
+                                  self.cvmat.tostring(),
+                                  "raw",
+                                  "BGR",
+                                  self.cvmat.width*3,
+                                  0
+                              )
+        else:
+            im = Image.fromstring(
+                                  'L',
+                                  cv.GetSize(self.cvmat),
+                                  self.cvmat.tostring()
                               )
         
         im = im.resize((im.size[0]//scaleDownFactor, im.size[1]//scaleDownFactor))
@@ -90,9 +96,35 @@ class Frame:
         
         root.mainloop()
 
-        
+    def findOutlineInMask(self, mask=None, returnCopy=False):
+        pass
+
+    def grayImage(self, returnCopy=False, method=0):
+        """If my image is grayscale, return it.  Otherwise, convert it to grayscale and
+        overwrite my image with the newly gray image only if requested."""
+        if self.cvmat.channels==1:
+            if returnCopy==True:
+                return self.cvmat
+            else:
+                return None
+        elif self.cvmat.channels==3:
+            gray_mat = cv.CreateMat(self.cvmat.rows, self.cvmat.cols, cv.CV_8UC1)                
+            cv.CvtColor(self.cvmat, gray_mat, cv.CV_RGB2GRAY)
+            
+            if returnCopy:
+                return gray_mat
+            else:
+                self.cvmat = gray_mat
+                return None
+        else:
+            raise ImageProcessError("Image did not have either 1 or 3 channels. Can't convert to grayscale.") 
+                
+
 class ImageInitError(Exception):
     pass
 
 class ImageMismatchError(Exception):
+    pass
+
+class ImageProcessError(Exception):
     pass
