@@ -14,7 +14,6 @@ import cv2.cv as cv
 class Frame:
     def __init__(self, image):
         self.setImage(image)
-        self.mask = None
     
     def setImage(self, image, copyCvMat=True):
         """Object is getting a new image.  If it's already an OpenCV Mat,
@@ -37,8 +36,6 @@ class Frame:
         
         else:
             raise ImageInitError("setImage requires a cvMat, numpy array, or filename string, but I see a {}".format(type(image)))
-
-        self.mask = None
 
     def setImageFromFile(self,filename):
         """Get image from file and store as CvMat."""
@@ -67,12 +64,13 @@ class Frame:
         Tkinter to display in a no-frills, click-to-dismiss window."""
         
         root = tk.Tk()
-        root.title("image display - click to close")
+        root.title("image display - any key or click to close")
         
         def kill_window(event):
             root.destroy()
         
         root.bind("<Button>", kill_window)
+        root.bind("<Key>", kill_window)
         
         if self.cvmat.channels==3:
             im = Image.fromstring(
@@ -126,37 +124,21 @@ class Frame:
         return self.__deepcopy__(memodic=None)
 
     def __copy__(self):
-        newFrame = Frame(cv.CreateMat(self.cvmat.rows,
-                                      self.cvmat.cols,
-                                      self.cvmat.type))
-        if self.mask != None:
-            newFrame.mask = self.mask
+        newFrame = Frame(self.cvmat)
         return newFrame
 
     def __deepcopy__(self, memodic):
-        newFrame = Frame(cv.CreateMat(self.cvmat.rows,
-                                      self.cvmat.cols,
-                                      self.cvmat.type))
+        newFrame = Frame(self.blankCopy())
         cv.Copy(self.cvmat, newFrame.cvmat)
-        if self.mask != None:
-            newFrame.blankMask()
-            cv.Copy(self.mask, newFrame.mask)
         return newFrame
 
-    def mask2image(self):
-        self.setImage(self.mask)
-    
-    def image2mask(self):
-        self.mask = self.grayImage(returnMat=True)   
-        
-    def blankMask(self):
-        self.mask = self.blankCopy()
-
-    def blankCopy(self, mode='L'):
+    def blankCopy(self, mode=None):
         if mode=="RGB":
             mode=cv.CV_8UC3
-        else:
+        elif mode=="L":
             mode=cv.CV_8UC1
+        else:
+            mode=self.cvmat.type
         
         blank = cv.CreateMat(self.cvmat.rows, self.cvmat.cols, mode)
         cv.SetZero(blank)
@@ -210,7 +192,7 @@ class Frame:
         else:
             raise ImageProcessError("Image did not have either 1 or 3 channels. Can't convert to grayscale.") 
                 
-    def largestObjectInMask(self, mask=None, returnMat=False):
+    def findLargestObject(self):
         pass
 
 
