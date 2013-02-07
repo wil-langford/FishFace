@@ -11,25 +11,23 @@ import Image, ImageTk
 # import cv
 import cv2.cv as cv
 
+import cv2
+
 class Frame:
     def __init__(self, image):
         self.setImage(image)
     
-    def setImage(self, image, copyCvMat=True):
-        """Object is getting a new image.  If it's already an OpenCV Mat,
-        just store it.  Otherwise, try to convert it from numpy.array or
-        load it from a filename string."""
+    def setImage(self, image, copyArray=True):
+        """Object is getting a new image.  If it's already a numpy.array with
+        dtype uint8, just copy it.  If it's a string, try to load from that
+        filename."""
         
         # Depending on file type, use various initializers
-        if (type(image)==cv.cvmat):
-            if copyCvMat:
-                self.cvmat = cv.CreateMat(image.rows,image.cols,image.type)
-                cv.Copy(image, self.cvmat)
+        if(type(image)==np.ndarray):
+            if copyArray:
+                self.array = np.copy(image)
             else:
-                self.cvmat = image
-
-        elif(type(image)==np.ndarray):
-            self.fromArray(image)
+                self.array = image
 
         elif(type(image)==str):
             self.setImageFromFile(image)
@@ -38,33 +36,25 @@ class Frame:
             raise ImageInitError("setImage requires a cvMat, numpy array, or filename string, but I see a {}".format(type(image)))
 
     def setImageFromFile(self,filename):
-        """Get image from file and store as CvMat."""
+        """Get image from file and store as my array."""
         if os.path.isfile(filename):
-            self.cvmat = cv.LoadImageM(filename)
+            self.array = cv2.imread(filename)
         else:
             raise ImageInitError("File not found: {}".format(filename))
 
-    def fromArray(self,image):
-        """Convert Numpy array to my CvMat and store as my image."""
-        if image.dtype==np.uint8:
-            self.cvmat = cv.fromarray(image)
-        else:
-            raise ImageInitError("Image must have 8 bits per channel.")
-    
-    def toArray(self):
-        """Convert my image from CvMat to Numpy array and return it."""
-        return np.asarray(self.cvmat)
-
     def saveImageToFile(self, filename):
         """Save the image to a file."""
-        cv.SaveImage(filename, self.cvmat)                
+        cv2.imwrite(filename, self.array)                
     
-    def onScreen(self, scaleDownFactor=2):
+    def onScreen(self, scaleDownFactor=2, message = None):
         """I need something to display these things for debugging. This uses
         Tkinter to display in a no-frills, click-to-dismiss window."""
         
+        if message == None:
+            message = "image display - any key or click to close"
+        
         root = tk.Tk()
-        root.title("image display - any key or click to close")
+        root.title(message)
         
         def kill_window(event):
             root.destroy()
@@ -72,22 +62,10 @@ class Frame:
         root.bind("<Button>", kill_window)
         root.bind("<Key>", kill_window)
         
-        if self.cvmat.channels==3:
-            im = Image.fromstring(
-                                  'RGB',
-                                  cv.GetSize(self.cvmat),
-                                  self.cvmat.tostring(),
-                                  "raw",
-                                  "BGR",
-                                  self.cvmat.width*3,
-                                  0
-                              )
-        else:
-            im = Image.fromstring(
-                                  'L',
-                                  cv.GetSize(self.cvmat),
-                                  self.cvmat.tostring()
-                              )
+        # why it mangles the color channel order I'll never know
+        ar=np.copy(self.array)
+        ar[:,:,0],ar[:,:,2] = ar[:,:,2],ar[:,:,0]
+        im = Image.fromarray(np.roll(ar, 1, axis=-1))
         
         im = im.resize((im.size[0]//scaleDownFactor, im.size[1]//scaleDownFactor))
         
@@ -99,21 +77,19 @@ class Frame:
         
         root.mainloop()
 
-    def findEdges(self, returnMat=False, thickenEdges=True, thickener=3):
+    def findEdges(self, returnArray=False, thickenEdges=True, thickener=3):
         """Uses OpenCV's Canny filter implementation to find edges."""
         
-        out = self.blankCopy(mode="L")
-        
-        cv.Canny(self.cvmat, out, 50, 100, 3)
+        out = cv2.Canny(self.array, 50, 100, apertureSize=3)
         
         if thickenEdges:
-            se = self.slider(thickener, shape="circle")
-            cv.Dilate(out,out,se)
+            se = self.slider(thickener, shape="circ")
+            out = cv2.dilate(out,se)
         
-        if returnMat:
+        if returnArray:
             return out
         else:
-            self.cvmat = out
+            self.array = out
 
     def shallowcopy(self):
         return self.__copy__()
@@ -122,112 +98,125 @@ class Frame:
         return self.__deepcopy__()
 
     def blankCopy(self, mode=None):
-        if mode=="RGB":
-            mode=cv.CV_8UC3
-        elif mode=="L":
-            mode=cv.CV_8UC1
-        else:
-            mode=self.cvmat.type
-        
-        blank = cv.CreateMat(self.cvmat.rows, self.cvmat.cols, mode)
-        cv.SetZero(blank)
-        return blank
+        if mode==None:
+            return np.zeros(self.array.shape)
+        if mode=="L":
+            return np.zeros(self.array.shape[0:1])
 
-    def deltaImage(self, calImage, returnMat=False):
-        """Subtracts the provided calImage from my image, takes the absolute
-        value, then stores/returns the result."""
+    def deltaImage(self, calImage, returnArray=False):
+        """Finds the absolute difference between the calImage and my array,
+        then stores/returns the result."""
         
-        cg = calImage.grayImage(returnMat=True)
-        sg = self.grayImage(returnMat=True)
+        diff = cv2.absdiff(calImage.grayImage(returnArray=True),
+                           self.grayImage(returnArray=True))
         
-        diff = self.blankCopy(mode="L")
-        
-        cv.AbsDiff(cg,sg,diff)
-        
-        if returnMat:
+        if returnArray:
             return diff
         else:
-            self.cvmat = diff
+            self.array = diff
             return None
 
-    def threshold(self, threshold, returnMat=False):
-        out = self.blankCopy(mode="L")
+    def threshold(self, threshold, returnArray=False):
+        # The [1] at the end is because we don't care what the retval is,
+        # we just want the image back.
+        out = cv2.threshold(self.array, thresh=threshold,
+                            maxval=255, type=cv2.THRESH_BINARY)[1]
         
-        cv.Threshold(self.cvmat, out, threshold, 255, cv.CV_THRESH_BINARY)
-        
-        if returnMat:
+        if returnArray:
             return out
         else:
-            self.cvmat = out
+            self.array = out
             return None
                    
-    def grayImage(self, returnMat=False):
+    def grayImage(self, returnArray=False, method=0):
         """If my image is grayscale, return it.  Otherwise, convert to grayscale
         and store/return the result."""
-        if self.cvmat.channels==1:
-            if returnMat:
-                return self.cvmat
-            else:
-                return None
-        elif self.cvmat.channels==3:
-            gray_mat = cv.CreateMat(self.cvmat.rows, self.cvmat.cols, cv.CV_8UC1)                
-            cv.CvtColor(self.cvmat, gray_mat, cv.CV_RGB2GRAY)
-            
-            if returnMat:
-                return gray_mat
-            else:
-                self.cvmat = gray_mat
-                return None
+        if self.array.ndim==2:
+            gray = np.copy(self.array)
+        elif self.array.ndim==3:
+            # I experimented with each method.  All seem to work fine with my test images
+            # so I'm using the fastest by default.
+            # The higher the number of the method, the longer it takes.
+            if method==0: # max of all three color values
+                gray = np.amax(self.array, axis=2)
+            elif method==1: # min of all three color values
+                gray = np.amin(self.array, axis=2)
+            elif method==2: # average of max color and min color
+                # this one may be broken by the use of modular addition in uint8 arrays
+                gray = (np.amax(self.array, axis=2) + np.amin(self.array, axis=2)) // 2
+            elif method==3: # average of all three colors
+                gray = np.sum(self.array, axis=2) // 3
+            elif method==4: # using the mean function and converting to integer
+                gray = np.mean(self.array, axis=2)
+                gray = np.uint8(gray)
         else:
-            raise ImageProcessError("Image did not have either 1 or 3 channels. Can't convert to grayscale.") 
+            raise ImageProcessError("Image did not have either 1 or 3 channels. Can't convert to grayscale.")
+        
+        gray = np.uint8(gray)
+        
+        if returnArray:
+            return gray
+        else:
+            self.array = gray
+            return None 
 
     def slider(self, radius=3, shape="circ"):
         if shape=="circ":
-            shp = cv.CV_SHAPE_ELLIPSE
+            shp = cv2.MORPH_ELLIPSE
         elif shape=="cross":
-            shp = cv.CV_SHAPE_RECT
+            shp = cv2.MORPH_CROSS
         elif shape=="rect":        
-            shp = cv.CV_SHAPE_RECT
+            shp = cv2.MORPH_RECT
         else:
             raise ImageProcessError("Couldn't create a slider with shape: {}".format(shape))
-        return cv.CreateStructuringElementEx(radius*2+1, radius*2+1,
-                                            radius, radius,
-                                            shp)
+        return cv2.getStructuringElement(shp, (radius*2+1, radius*2+1) )
                 
-    def findLargestObject(self, returnMat=False, sliderRadius=3, iterClosing=2, iterOpening=3):
-        #out = self.blankCopy()
-        #cv.Copy(self.cvmat, out)
+    def findLargestObject(self, returnArray=False, sliderRadius=3, iterClosing=3, iterOpening=3):
         
-        out = self.cvmat
-
+        out = self.array
+        
         # dilation followed by erosion fills in holes
         # this process is called closing
         se = self.slider(sliderRadius)
-        cv.Dilate(out, out, se, iterClosing)        
-        cv.Erode(out,out, se, iterClosing)
-        
+        out = cv2.dilate(out, kernel=se, iterations=iterClosing)        
+        out = cv2.erode(out, kernel=se, iterations=iterClosing)
+
         # erosion followed by dilation removes smaller objects
         # this process is called opening
         se = self.slider(sliderRadius)
-        cv.Erode(out,out, se, iterOpening)
-        cv.Dilate(out, out, se, iterOpening)
-    
-        contours = cv.FindContours(out,cv.CreateMemStorage(),mode=cv.CV_RETR_EXTERNAL)
+        out = cv2.erode(out, kernel=se, iterations=iterOpening)
+        out = cv2.dilate(out, kernel=se, iterations=iterOpening)        
+
+        # the [0] at the end is because we don't care about the hierarchy
+        contours = cv2.findContours(out,
+                                    mode=cv2.RETR_EXTERNAL,
+                                    method=cv2.CHAIN_APPROX_SIMPLE
+                                    )[0]
         
-        ctr = contours
-        
-        print len(ctr)
-        while(ctr.h_next()!=None):
-            print len(ctr)
-            ctr = ctr.h_next()
+        areas = [cv2.contourArea(ctr) for ctr in contours]
+        max_contour = [contours[areas.index(max(areas))]]
+
+        out = self.blankCopy()
+                 
+        cv2.drawContours(image=out,
+                         contours=max_contour,
+                         contourIdx=-1,
+                         color=255,
+                         thickness=1)
+         
+        if returnArray:
+            return out
+        else:
+            self.array = out
+            return None
         
     def __copy__(self):
-        newFrame = Frame(self.cvmat)
+        newFrame = Frame(self.array)
         return newFrame
 
     def __deepcopy__(self, memodic=None):
         newFrame = Frame(self.blankCopy())
-        cv.Copy(self.cvmat, newFrame.cvmat)
+        newFrame.array = np.copy(self.array)
         return newFrame
 
 
