@@ -10,7 +10,6 @@ import Image, ImageTk
 ### analysis to work. 
 # import cv
 import cv2.cv as cv
-
 import cv2
 
 class Frame:
@@ -38,13 +37,13 @@ class Frame:
     def setImageFromFile(self,filename):
         """Get image from file and store as my array."""
         if os.path.isfile(filename):
-            self.array = cv2.imread(filename)
+            self.array = cv2.cvtColor(cv2.imread(filename), cv.CV_RGB2BGR)
         else:
             raise ImageInitError("File not found: {}".format(filename))
 
     def saveImageToFile(self, filename):
         """Save the image to a file."""
-        cv2.imwrite(filename, self.array)                
+        cv2.imwrite(filename, cv2.cvtColor(self.array, cv.CV_BGR2RGB))                
     
     def onScreen(self, scaleDownFactor=2, message = None):
         """I need something to display these things for debugging. This uses
@@ -62,11 +61,7 @@ class Frame:
         root.bind("<Button>", kill_window)
         root.bind("<Key>", kill_window)
         
-        # why it mangles the color channel order I'll never know
-        ar=np.copy(self.array)
-        ar[:,:,0],ar[:,:,2] = ar[:,:,2],ar[:,:,0]
-        im = Image.fromarray(np.roll(ar, 1, axis=-1))
-        
+        im = Image.fromarray(self.array)        
         im = im.resize((im.size[0]//scaleDownFactor, im.size[1]//scaleDownFactor))
         
         photo = ImageTk.PhotoImage(im)
@@ -171,9 +166,9 @@ class Frame:
             raise ImageProcessError("Couldn't create a slider with shape: {}".format(shape))
         return cv2.getStructuringElement(shp, (radius*2+1, radius*2+1) )
                 
-    def findLargestObject(self, returnArray=False, sliderRadius=3, iterClosing=3, iterOpening=3):
+    def findLargestObjectContours(self, sliderRadius=3, iterClosing=3, iterOpening=3):
         
-        out = self.array
+        out = np.copy(self.array)
         
         # dilation followed by erosion fills in holes
         # this process is called closing
@@ -196,19 +191,14 @@ class Frame:
         areas = [cv2.contourArea(ctr) for ctr in contours]
         max_contour = [contours[areas.index(max(areas))]]
 
-        out = self.blankCopy()
-                 
-        cv2.drawContours(image=out,
-                         contours=max_contour,
+        return max_contour
+
+    def outlineLargestObjectWithContours(self, contours, lineColor=(255,100,100), lineThickness=3):
+        cv2.drawContours(image=self.array,
+                         contours=contours,
                          contourIdx=-1,
-                         color=255,
-                         thickness=1)
-         
-        if returnArray:
-            return out
-        else:
-            self.array = out
-            return None
+                         color=lineColor,
+                         thickness=lineThickness)
         
     def __copy__(self):
         newFrame = Frame(self.array)
