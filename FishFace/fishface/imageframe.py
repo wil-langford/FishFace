@@ -16,7 +16,7 @@ class Frame:
         self.setImage(image)
         self.mask = None
     
-    def setImage(self, image, copyCvMat=False):
+    def setImage(self, image, copyCvMat=True):
         """Object is getting a new image.  If it's already an OpenCV Mat,
         just store it.  Otherwise, try to convert it from numpy.array or
         load it from a filename string."""
@@ -57,7 +57,6 @@ class Frame:
     def toArray(self):
         """Convert my image from CvMat to Numpy array and return it."""
         return np.asarray(self.cvmat)
-
 
     def saveImageToFile(self, filename):
         """Save the image to a file."""
@@ -118,8 +117,32 @@ class Frame:
         if returnMat:
             return out
         else:
-            self.mask = out
-        
+            self.cvmat = out
+
+    def shallowcopy(self):
+        return self.__copy__()
+
+    def copy(self):
+        return self.__deepcopy__(memodic=None)
+
+    def __copy__(self):
+        newFrame = Frame(cv.CreateMat(self.cvmat.rows,
+                                      self.cvmat.cols,
+                                      self.cvmat.type))
+        if self.mask != None:
+            newFrame.mask = self.mask
+        return newFrame
+
+    def __deepcopy__(self, memodic):
+        newFrame = Frame(cv.CreateMat(self.cvmat.rows,
+                                      self.cvmat.cols,
+                                      self.cvmat.type))
+        cv.Copy(self.cvmat, newFrame.cvmat)
+        if self.mask != None:
+            newFrame.blankMask()
+            cv.Copy(self.mask, newFrame.mask)
+        return newFrame
+
     def mask2image(self):
         self.setImage(self.mask)
     
@@ -139,9 +162,9 @@ class Frame:
         cv.SetZero(blank)
         return blank
 
-    def deltaImage(self, calImage, threshold=40, returnMat=False):
-        """Subtracts the provided calImage from my image, then thresholds
-        and stores/returns the result."""
+    def deltaImage(self, calImage, returnMat=False):
+        """Subtracts the provided calImage from my image, takes the absolute
+        value, then stores/returns the result."""
         
         cg = calImage.grayImage(returnMat=True)
         sg = self.grayImage(returnMat=True)
@@ -155,7 +178,18 @@ class Frame:
         else:
             self.cvmat = diff
             return None
-            
+
+    def threshold(self, threshold, returnMat=False):
+        out = self.blankCopy(mode="L")
+        
+        cv.Threshold(self.cvmat, out, threshold, 255, cv.CV_THRESH_BINARY)
+        
+        if returnMat:
+            return out
+        else:
+            self.cvmat = out
+            return None
+                   
     def grayImage(self, returnMat=False, method=0):
         """If my image is grayscale, return it.  Otherwise, convert to grayscale
         and store/return the result."""
