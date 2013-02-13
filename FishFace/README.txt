@@ -20,3 +20,8 @@ Things I'm considering as possible ways to accomplish that:
 * Analysis of the convex hull.
 * Convolution with specially-crafted filters.
 * Some combination of the above.
+
+ROUGH PLAN
+==========
+Version 1.0 will be a command-line application with batch processing.
+Version 2.0 will have a GUI and better (i.e. extant) documentation.
