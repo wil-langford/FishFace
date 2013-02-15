@@ -337,8 +337,6 @@ class Frame:
 
     def crop(self, box):
         """Crops the image to the box provided."""
-        print box
-        print self.array.shape
         cropped_array=self.array[box[0]:box[2], box[1]:box[3]]
         self.setImage(cropped_array)
 
