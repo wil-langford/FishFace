@@ -272,7 +272,7 @@ class Frame:
             self.setImage(out.array)
             return None
 
-    def findLargestObjectContours(self, kernelRadius=3, iterClosing=3, iterOpening=3):
+    def findLargestBlobContours(self, kernelRadius=3, iterClosing=3, iterOpening=3):
         """Returns a list of lists.  Each element of the list is a single contour,
         and the elements of each contour are the ordered coordinates of the contour."""
         
@@ -293,7 +293,7 @@ class Frame:
 
         return max_contour
 
-    def outlineLargestObjectWithContours(self, contours, lineColor=(255,0,255), lineThickness=3, filledIn=True):
+    def outlineLargestBlobWithContours(self, contours, lineColor=(255,0,255), lineThickness=3, filledIn=True):
         """Actually draws the provided contours onto the image."""
 
         if filledIn:
@@ -323,7 +323,7 @@ class Frame:
                        radius=circleRadius,
                        color=lineColor)
 
-    def drawOutlineAroundLargestObject(self, calImageFrame, threshold=50, kernelRadius=3, lineColor=(255,0,255), lineThickness=3, filledIn=True):
+    def drawOutlineAroundLargestBlob(self, calImageFrame, threshold=50, kernelRadius=3, lineColor=(255,0,255), lineThickness=3, filledIn=True):
         """Convenience method that finds the contours of the largest object
         and then draws them onto the image."""
         child = self.copy()
@@ -331,8 +331,8 @@ class Frame:
         child.deltaImage(calImageFrame)
         child.threshold(threshold)
         
-        self.outlineLargestObjectWithContours(
-                    child.findLargestObjectContours(kernelRadius=kernelRadius),
+        self.outlineLargestBlobWithContours(
+                    child.findLargestBlobContours(kernelRadius=kernelRadius),
                     lineColor, lineThickness, filledIn)
 
     def crop(self, box):
@@ -349,10 +349,10 @@ class Frame:
         
         out.deltaImage(calImageFrame)
         out.threshold(threshold)        
-        ctr = out.findLargestObjectContours(kernelRadius=kernelRadius)
+        ctr = out.findLargestBlobContours(kernelRadius=kernelRadius)
     
         out.setImage(out.blankImageCopy())    
-        out.outlineLargestObjectWithContours(ctr, lineColor, lineThickness, filledIn=True)
+        out.outlineLargestBlobWithContours(ctr, lineColor, lineThickness, filledIn=True)
                         
         out.crop(out.boundingBoxFromContour(ctr))
 
