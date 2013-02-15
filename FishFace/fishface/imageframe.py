@@ -16,32 +16,46 @@ import cv2
 class Frame:
     def __init__(self, image):
         self.setImage(image)
-        self.roi = [0,0,0,0]
     
     def setImage(self, image, copyArray=True):
-        """Object is getting a new image.  If it's already a numpy.array with
+        """The frame is getting a new image.  If it's already a numpy.array with
         dtype uint8, just copy it.  If it's a string, try to load from that
         filename."""
         
         # Depending on file type, use various initializers
+        
+        # It's already a numpy array. Store or copy it. 
         if(type(image)==np.ndarray):
             if copyArray:
                 self.array = np.copy(image)
             else:
                 self.array = image
 
+        # It's a string; treat it like a filename.
         elif(type(image)==str):
             self.setImageFromFile(image)
         
         else:
-            raise ImageInitError("setImage requires a cvMat, numpy array, or filename string, but I see a {}".format(type(image)))
+            raise ImageInitError("setImage requires a numpy array or filename string, but I see a {}".format(type(image)))
+
+        self.shape = self.array.shape
+
+        if len(self.shape) > 1:
+            self.spatialshape = tuple(self.shape[:2])
+            self.ydim = self.spatialshape[0]
+            self.xdim = self.spatialshape[1]
+
+            if len(self.shape) == 2:
+                self.channels = 1
+            elif len(self.shape) == 3:
+                self.channels = self.array.shape[2]
 
     def setImageFromFile(self,filename):
         """Get image from file and store as my array."""
         if os.path.isfile(filename):
             self.array = cv2.cvtColor(cv2.imread(filename), cv.CV_RGB2BGR)
         else:
-            raise ImageInitError("File not found: {}".format(filename))
+            raise ImageInitError("File not found (or isn't a regular file): {}".format(filename))
 
     def saveImageToFile(self, filename):
         """Save the image to a file."""
@@ -80,7 +94,7 @@ class Frame:
         out = cv2.Canny(self.array, 50, 100, apertureSize=3)
         
         if thickenEdges:
-            se = self.kernel(thickener, shape="circ")
+            se = self.kernel(thickener, shape="circle")
             out = cv2.dilate(out,se)
         
         if returnArray:
@@ -88,30 +102,17 @@ class Frame:
         else:
             self.setImage(out)
 
-    def shallowcopy(self):
-        return self.__copy__()
-
-    def setRoiFromContour(self,contour):
+    def boundingBoxFromContour(self,contour,border=1):
+        """Convenience method to find the bounding box of a contour. Output is a tuple
+        of the form (y_min, x_min, y_max, x_max).  The border is an optional extra
+        margin to include in the cropped image."""
         maxes = np.amax(contour, axis=1)[0,0]
         mins  = np.amin(contour, axis=1)[0,0]
         
-        self.roi = [mins[1], maxes[1], mins[0], maxes[0]]
-
-    def roiImage(self):
-        return self.array[self.roi[0]:self.roi[1],
-                          self.roi[2]:self.roi[3]]
-
-    def roi2image(self):
-        self.setImage(self.roiImage())
-
-    def copy(self):
-        return self.__deepcopy__()
-
-    def blankCopy(self, mode=None):
-        if mode==None:
-            return np.zeros(self.array.shape)
-        if mode=="L":
-            return np.zeros(self.array.shape[0:1])
+        return (max(mins[1] - border, 0),
+                max(mins[0] - border, 0),
+                min(maxes[1] + border, self.xdim-1),
+                min(maxes[0] + border, self.ydim-1))
 
     def deltaImage(self, calImageFrame, returnArray=False):
         """Finds the absolute difference between the calImage and my array,
@@ -127,6 +128,8 @@ class Frame:
             return None
 
     def threshold(self, threshold, returnArray=False):
+        """Wrapper for the cv2 threshold function. Stores/returns result."""
+
         # The [1] at the end is because we don't care what the retval is,
         # we just want the image back.
         out = cv2.threshold(self.array, thresh=threshold,
@@ -160,7 +163,7 @@ class Frame:
                 gray = np.mean(self.array, axis=2)
                 gray = np.uint8(gray)
         else:
-            raise ImageProcessError("Image did not have either 1 or 3 channels. Can't convert to grayscale.")
+            raise ImageProcessError("Image did not have either 1 or 3 channels. I don't know how to convert it to grayscale.")
         
         gray = np.uint8(gray)
         
@@ -168,20 +171,26 @@ class Frame:
             return gray
         else:
             self.setImage(gray)
+            self.channels=1
             return None 
 
-    def kernel(self, radius=3, shape="circ"):
-        if shape=="circ":
+    def kernel(self, radius=3, shape="circle"):
+        """Convenience method wrapping the cv2.getStructuringElement method.
+        Radius and shape can be specified."""
+
+        if shape=="circle":
             shp = cv2.MORPH_ELLIPSE
         elif shape=="cross":
             shp = cv2.MORPH_CROSS
-        elif shape=="rect":        
+        elif shape=="rectangle":        
             shp = cv2.MORPH_RECT
         else:
             raise ImageProcessError("Couldn't create a kernel with shape: {}".format(shape))
         return cv2.getStructuringElement(shp, (radius*2+1, radius*2+1) )
                 
-    def toTheBones(self, skelKernelRadius=1, skelKernelShape='circ', returnArray=False):
+    def toTheBones(self, skelKernelRadius=1, skelKernelShape='circle', returnArray=False):
+        """Finds the morphological skeleton.  Kernel parameters are passed to
+        self.kernel, and the result is stored/returned."""
         src = np.copy(self.array)
         size = np.size(src)
         out = np.zeros(src.shape,np.uint8)
@@ -208,6 +217,7 @@ class Frame:
             return None
 
     def dilate(self, kernel, dilIter, returnArray=False):
+        """Morphological dilation with provided kernel. Result is stored/returned."""
         arr = np.copy(self.array)
         
         arr = cv2.dilate(arr, kernel=kernel, iterations=dilIter)
@@ -219,6 +229,7 @@ class Frame:
             return None
 
     def erode(self, kernel, erIter, returnArray=False):
+        """Morphological erosion with provided kernel. Result is stored/returned."""
         arr = np.copy(self.array)
 
         arr = cv2.erode(arr, kernel=kernel, iterations=erIter)
@@ -229,7 +240,9 @@ class Frame:
             self.setImage(arr)
             return None
 
-    def binOpening(self, kernelRadius=3, kernelShape='circ', iterations=1, returnArray=False):
+    def binOpening(self, kernelRadius=3, kernelShape='circle', iterations=1, returnArray=False):
+        """Morphological opening with generated kernel.  It's essentially an erosion
+        followed by a dilation. Result is stored/returned."""
         out = self.copy()
         
         se = self.kernel(radius=kernelRadius, shape=kernelShape)
@@ -243,7 +256,9 @@ class Frame:
             self.setImage(out.array)
             return None
 
-    def binClosing(self, kernelRadius=3, kernelShape='circ', iterations=1, returnArray=False):
+    def binClosing(self, kernelRadius=3, kernelShape='circle', iterations=1, returnArray=False):
+        """Morphological closing with generated kernel.  It's essentially a dilation
+        followed by an erosion. Result is stored/returned."""
         out = self.copy()
         
         se = self.kernel(radius=kernelRadius, shape=kernelShape)
@@ -257,15 +272,18 @@ class Frame:
             self.setImage(out.array)
             return None
 
-    def findLargestObjectContours(self, kernelRadius=3, iterClosing=3, iterOpening=3, setRoi=True):
+    def findLargestObjectContours(self, kernelRadius=3, iterClosing=3, iterOpening=3):
+        """Returns a list of lists.  Each element of the list is a single contour,
+        and the elements of each contour are the ordered coordinates of the contour."""
         
-        out = self.copy()
+        temp = self.copy()
+        temp.grayImage()
         
-        out.binClosing(kernelRadius=kernelRadius, iterations=iterClosing)
-        out.binOpening(kernelRadius=kernelRadius, iterations=iterOpening)
+        temp.binClosing(kernelRadius=kernelRadius, iterations=iterClosing)
+        temp.binOpening(kernelRadius=kernelRadius, iterations=iterOpening)
 
         # the [0] at the end is because we don't care about the hierarchy
-        contours = cv2.findContours(out.array,
+        contours = cv2.findContours(temp.array,
                                     mode=cv2.RETR_EXTERNAL,
                                     method=cv2.CHAIN_APPROX_SIMPLE
                                     )[0]
@@ -273,18 +291,13 @@ class Frame:
         areas = [cv2.contourArea(ctr) for ctr in contours]
         max_contour = [contours[areas.index(max(areas))]]
 
-        if setRoi:
-            self.setRoiFromContour(max_contour)
-
         return max_contour
 
-    def outlineLargestObjectWithContours(self, contours, lineColor=(255,0,255), lineThickness=3, filledIn=True, adjustForRoi=False):
+    def outlineLargestObjectWithContours(self, contours, lineColor=(255,0,255), lineThickness=3, filledIn=True):
+        """Actually draws the provided contours onto the image."""
 
         if filledIn:
             lineThickness = -abs(lineThickness)
-
-        if adjustForRoi:
-            contours = np.array(contours) + np.array([[self.roi[0], self.roi[2]]])
 
         cv2.drawContours(image=self.array,
                          contours=contours,
@@ -292,22 +305,15 @@ class Frame:
                          color=lineColor,
                          thickness=lineThickness)
 
-    def circlesAtPoints(self, points, lineColor=(255,0,255), lineThickness=3, filledIn=True, circleRadius=3, adjustForRoi=False):
+    def circlesAtPoints(self, points, lineColor=(255,0,255), lineThickness=3, filledIn=True, circleRadius=3):
+        """Draws dots at each of the points in the list provided.  Various
+        attributes of the points (e.g. color, radius) can be specified."""
 
         if filledIn:
             lineThickness = -abs(lineThickness)
 
         points = np.roll(points, 1, axis=2)
-
-        if adjustForRoi:
-            xadj=self.roi[0]
-            yadj=self.roi[2]
-        else:
-            xadj=0
-            yadj=0
                     
-        points = [(int(x[0,1]+yadj),int(x[0,0]+xadj)) for x in points]
-
         if self.array.ndim==2:
             lineColor=sum(lineColor)//3
 
@@ -317,48 +323,77 @@ class Frame:
                        radius=circleRadius,
                        color=lineColor)
 
-    def drawOutlineAroundLargestObject(self, calImageFrame, threshold=50, kernelRadius=3, lineColor=(255,0,255), lineThickness=3, filledIn=True, adjustForRoi=False):
+    def drawOutlineAroundLargestObject(self, calImageFrame, threshold=50, kernelRadius=3, lineColor=(255,0,255), lineThickness=3, filledIn=True):
+        """Convenience method that finds the contours of the largest object
+        and then draws them onto the image."""
         child = self.copy()
         
         child.deltaImage(calImageFrame)
         child.threshold(threshold)
         
-        self.outlineLargestObjectWithContours(child.findLargestObjectContours(kernelRadius=kernelRadius),
-                                              lineColor, lineThickness, filledIn)
+        self.outlineLargestObjectWithContours(
+                    child.findLargestObjectContours(kernelRadius=kernelRadius),
+                    lineColor, lineThickness, filledIn)
 
-    def isolateLargestBlob(self, calImageFrame, threshold=50, kernelRadius=3, returnArray=False, lineColor=(255,0,255), lineThickness=3, filledIn=True, adjustForRoi=False):        
+    def crop(self, box):
+        """Crops the image to the box provided."""
+        print box
+        print self.array.shape
+        cropped_array=self.array[box[0]:box[2], box[1]:box[3]]
+        self.setImage(cropped_array)
+
+    def cropToLargestBlob(self, calImageFrame, threshold=50, kernelRadius=3, returnArray=False, lineColor=(255,0,255), lineThickness=3, filledIn=True):
+        """Convenience method that crops the image to the largest object in it."""
+
         out = self.copy()
         
         out.deltaImage(calImageFrame)
         out.threshold(threshold)        
         ctr = out.findLargestObjectContours(kernelRadius=kernelRadius)
     
-        out.setImage(out.blankCopy())    
-        out.outlineLargestObjectWithContours(ctr, lineColor, lineThickness, filledIn=True, adjustForRoi=adjustForRoi)
+        out.setImage(out.blankImageCopy())    
+        out.outlineLargestObjectWithContours(ctr, lineColor, lineThickness, filledIn=True)
                         
-        out.roi2image()
-        
-
+        out.crop(out.boundingBoxFromContour(ctr))
 
         if returnArray:
             return out.array
         else:
             self.setImage(out.array)
-            self.roi = out.roi
             return None
 
+    def blankImageCopy(self, mode=None):
+        """Return an array the same size as my image, optionally collapsing
+        the channel dimension to one channel to create a grayscale image."""
+        if mode==None:
+            return np.zeros(self.shape)
+        if mode=="L":
+            return np.zeros(self.spatialshape)
+
+
+    def shallowcopy(self):
+        """Return a non-deep copy of this object."""
+        return self.__copy__()
+
+    def copy(self):
+        """Return a deep copy of this object."""
+        return self.__deepcopy__()
         
     def __copy__(self):
+        """The actual implementation of the object shallowcopy() method.  Named so that
+        the copy module can find it."""
         newFrame = Frame(self.array, copyArray=False)
-        newFrame.roi = copy.copy(self.roi)
         return newFrame
 
     def __deepcopy__(self, memodic=None):
-        newFrame = Frame(self.blankCopy())
+        """The actual implementation of the object copy() method.  Named so that
+        the copy module can find it."""
+        newFrame = Frame(self.blankImageCopy())
         newFrame.array = np.copy(self.array)
-        newFrame.roi = copy.deepcopy(self.roi, memodic)
         return newFrame
 
+
+# Definitions of custom exceptions
 
 class ImageInitError(Exception):
     pass
