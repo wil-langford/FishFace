@@ -59,7 +59,22 @@ class Frame:
 
     def saveImageToFile(self, filename):
         """Save the image to a file."""
-        cv2.imwrite(filename, cv2.cvtColor(self.array, cv.CV_BGR2RGB))                
+        if self.channels==1:
+            cv2.imwrite(filename, self.array)              
+        elif self.channels==3:
+            cv2.imwrite(filename, cv2.cvtColor(self.array, cv.CV_BGR2RGB))              
+
+    def medianFilter(self, kernelRadius=1, returnArray=False):
+        """Apply median filtering to the image, storing/returning the result."""
+        out = np.copy(self.array)
+
+        out = cv2.medianBlur(out, kernelRadius)
+
+        if returnArray:
+            return out
+        else:
+            self.setImage(out)
+
     
     def onScreen(self, scaleDownFactor=1, message = None):
         """I need something to display these things for debugging. This uses
@@ -350,7 +365,7 @@ class Frame:
         ctr = out.findLargestBlobContours(kernelRadius=kernelRadius)
     
         out.setImage(out.blankImageCopy())    
-        out.outlineLargestBlobWithContours(ctr, lineColor, lineThickness, filledIn=True)
+        out.outlineLargestBlobWithContours(ctr, lineColor, lineThickness, filledIn)
                         
         out.crop(out.boundingBoxFromContour(ctr))
 
