@@ -36,7 +36,7 @@ def main(arguments):
                         help = 'How thick (in pixels) should lines be drawn.',
                         action='store')    
     parser.add_argument('--threshold-value', dest='threshold', type=int,
-                        metavar="THRESHOLD", default=50,
+                        metavar="THRESHOLD", default=60,
                         help = 'During image difference processing, what should the threshold be for filtering out the parts of the image that are similar?',
                         action='store')    
     parser.add_argument('--kernel-radius', dest='ksize', type=int,
@@ -80,7 +80,11 @@ def main(arguments):
             im_in.crop(crop_box)
             im_cal.crop(crop_box)
 
-        im_in.cropToLargestBlob(im_cal)
+        im_in.cropToLargestBlob(im_cal,
+                                threshold=args.threshold,
+                                kernelRadius=args.ksize,
+                                lineColor=args.color,
+                                lineThickness=args.thickness)
 
         if not args.quiet:        
             if args.outfile:
@@ -92,7 +96,7 @@ def main(arguments):
         im_in = imageframe.Frame(args.infile)
         im_cal = imageframe.Frame(args.calfile)
 
-        if crop_box != (-1):
+        if crop_box:
             im_in.crop(crop_box)
             im_cal.crop(crop_box)
         
