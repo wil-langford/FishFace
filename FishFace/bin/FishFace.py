@@ -31,6 +31,12 @@ def main(arguments):
                         metavar="OUTPUT_FILENAME",
                         help = 'If you want to save the result, specify a filename here. If no file is specified, the results will be briefly displayed.',
                         action='store')
+
+    parser.add_argument('-p','--batch-path', dest='batchpath', type=str,
+                        metavar="BATCH_PATH",
+                        help = 'The path of the data files for batch processing with a single string format replacement field.  For example, if you had files pic0001.jpg through pic0031.jpg in the data directory, you could use "data/pic00{:02d}.jpg" or "data/pic{:04d}.jpg" for the path.',
+                        action='store')
+
     parser.add_argument('--line-thickness', dest='thickness', type=int,
                         metavar="THICKNESS", default=3,
                         help = 'How thick (in pixels) should lines be drawn.',
@@ -57,6 +63,9 @@ def main(arguments):
                         action='store_true')
 
 
+    parser.add_argument('-B','--batch-mode', dest='batch',
+                        help = 'Engage batch mode.  Use with -a, -b, and -p arguments.',
+                        action='store_true')
     parser.add_argument('-C','--crop-to-foreground-object', dest='crop',
                         help = 'A command that crops the image to the foreground object.',
                         action='store_true')
@@ -72,45 +81,52 @@ def main(arguments):
         maxes = [int(x) for x in maxes.split("x")]
         crop_box = (mins[0], mins[1], maxes[0], maxes[1])
 
-    if args.crop:
-        im_in = imageframe.Frame(args.infile)
-        im_cal = imageframe.Frame(args.calfile)
+    if not args.batch:
+        if args.crop:
+            crop(args)
 
-        if crop_box:
-            im_in.crop(crop_box)
-            im_cal.crop(crop_box)
+        if args.outline:
+            outline(args)
 
-        im_in.cropToLargestBlob(im_cal,
-                                threshold=args.threshold,
-                                kernelRadius=args.ksize,
-                                lineColor=args.color,
-                                lineThickness=args.thickness)
+def crop(args):
+    im_in = imageframe.Frame(args.infile)
+    im_cal = imageframe.Frame(args.calfile)
 
-        if not args.quiet:        
-            if args.outfile:
-                im_in.saveImageToFile(args.outfile)
-            else:
-                im_in.onScreen(1, "Isolated largest object versus provided calibration image.")        
+    if crop_box:
+        im_in.crop(crop_box)
+        im_cal.crop(crop_box)
+
+    im_in.cropToLargestBlob(im_cal,
+                            threshold=args.threshold,
+                            kernelRadius=args.ksize,
+                            lineColor=args.color,
+                            lineThickness=args.thickness)
+
+    if not args.quiet:        
+        if args.outfile:
+            im_in.saveImageToFile(args.outfile)
+        else:
+            im_in.onScreen(1, "Isolated largest object versus provided calibration image.")        
     
-    if args.outline:
-        im_in = imageframe.Frame(args.infile)
-        im_cal = imageframe.Frame(args.calfile)
+def outline(args):
+    im_in = imageframe.Frame(args.infile)
+    im_cal = imageframe.Frame(args.calfile)
 
-        if crop_box:
-            im_in.crop(crop_box)
-            im_cal.crop(crop_box)
-        
-        im_in.drawOutlineAroundLargestBlob(calImageFrame=im_cal,
-                                            threshold=args.threshold,
-                                            kernelRadius=args.ksize,
-                                            lineColor=args.color,
-                                            lineThickness=args.thickness)
+    if crop_box:
+        im_in.crop(crop_box)
+        im_cal.crop(crop_box)
+    
+    im_in.drawOutlineAroundLargestBlob(calImageFrame=im_cal,
+                                        threshold=args.threshold,
+                                        kernelRadius=args.ksize,
+                                        lineColor=args.color,
+                                        lineThickness=args.thickness)
 
-        if not args.quiet:        
-            if args.outfile:
-                im_in.saveImageToFile(args.outfile)
-            else:
-                im_in.onScreen(2, "Outlined largest object versus provided calibration image.")        
+    if not args.quiet:        
+        if args.outfile:
+            im_in.saveImageToFile(args.outfile)
+        else:
+            im_in.onScreen(2, "Outlined largest object versus provided calibration image.")        
     
 
 if __name__ == '__main__':
