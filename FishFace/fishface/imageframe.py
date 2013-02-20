@@ -352,6 +352,11 @@ class Frame:
 
     def crop(self, box):
         """Crops the image to the box provided."""
+
+        # save the last shape and the bounding box for future reference
+        self.last_shape = self.shape
+        self.cropped_to = box
+
         cropped_array=self.array[box[0]:box[2], box[1]:box[3]]
         self.setImage(cropped_array)
 
