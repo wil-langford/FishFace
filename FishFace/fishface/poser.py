@@ -74,7 +74,11 @@ class Poser:
             startAngle = max(0, candidate - stepsize)
             stopAngle = min(180, candidate + stepsize)
 
-        return candidate
+        # The actual angle of the fish is the inverse of the candidate,
+        # because we rotated the whole array and then measured along one axis.
+        # Also, because at this point we only know a line parallel to the long
+        # axis and not the orientation of that axis, 180 is as good as 360.
+        return 180 - candidate
 
 
     
