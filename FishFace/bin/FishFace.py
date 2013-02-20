@@ -83,12 +83,12 @@ def main(arguments):
 
     if not args.batch:
         if args.crop:
-            crop(args)
+            crop(args, crop_box)
 
         if args.outline:
-            outline(args)
+            outline(args, crop_box)
 
-def crop(args):
+def crop(args, crop_box=None):
     im_in = imageframe.Frame(args.infile)
     im_cal = imageframe.Frame(args.calfile)
 
@@ -108,7 +108,7 @@ def crop(args):
         else:
             im_in.onScreen(1, "Isolated largest object versus provided calibration image.")        
     
-def outline(args):
+def outline(args, crop_box=None):
     im_in = imageframe.Frame(args.infile)
     im_cal = imageframe.Frame(args.calfile)
 
