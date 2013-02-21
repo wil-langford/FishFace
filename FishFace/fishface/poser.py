@@ -9,8 +9,8 @@ from scipy import ndimage
 ### but PyDev/Eclipse wants the second one for autocomplete and code
 ### analysis to work. 
 # import cv
-import cv2.cv as cv
-import cv2
+# import cv2.cv as cv
+# import cv2
 
 class Poser:
     def _rotate(self, degrees):
@@ -21,7 +21,7 @@ class Poser:
         """Caching rotation finder.  Stores the result of each rotation to
         quickly retrieve it instead of recalculating if it's needed again."""
         if type(degrees) != int:
-            raise ArrayProcessError("You tried to rotate by {} degrees, but only integer angles are supported for rotation at this time.".format(angle))
+            raise ArrayProcessError("You tried to rotate by {} degrees, but only integer angles are supported for rotation at this time.".format(degrees))
 
         if not degrees in self.rots:
             self.rots[degrees] = self._rotate(degrees)
@@ -73,6 +73,9 @@ class Poser:
             ### window overlaps the 0/180 rotation.
             startAngle = max(0, candidate - stepsize)
             stopAngle = min(180, candidate + stepsize)
+            
+            # So I stop getting unused variable warnings.
+            i += 0
 
         # The actual angle of the fish is the inverse of the candidate,
         # because we rotated the whole array and then measured along one axis.
