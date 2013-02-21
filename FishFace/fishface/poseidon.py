@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import copy
-import cv2
+# import cv2
 
 class Poseidon:
+    """A batch processing object that handles various operations
+    on lists or ranges of files/images."""
 
     def shallowcopy(self):
         """Return a non-deep copy of this object."""
@@ -16,16 +18,16 @@ class Poseidon:
     def __copy__(self):
         """The actual implementation of the object shallowcopy() method.  Named so that
         the copy module can find it."""
-        newPoser = Poser(self.array, copyArray=False)
-        newPoser.rots = self.rots
-        return newPoser
+        newPoseidon = Poseidon(self.array, copyArray=False)
+        newPoseidon.rots = self.rots
+        return newPoseidon
 
     def __deepcopy__(self, memodic=None):
         """The actual implementation of the object copy() method.  Named so that
         the copy module can find it."""
-        newPoser = Poser(self.array, copyArray=True)
-        newPoser.rots = copy.deepcopy(self.rots, memodic)
-        return newPoser
+        newPoseidon = Poseidon(self.array, copyArray=True)
+        newPoseidon.rots = copy.deepcopy(self.rots, memodic)
+        return newPoseidon
 
     def __init__(self, array):
         pass
