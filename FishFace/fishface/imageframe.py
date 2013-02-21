@@ -4,7 +4,7 @@ import numpy as np
 import os
 import Tkinter as tk
 import Image, ImageTk
-import copy
+# import copy
 
 ### Both lines below do the same thing in the actual Python interpreter,
 ### but PyDev/Eclipse wants the second one for autocomplete and code
