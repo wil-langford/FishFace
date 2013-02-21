@@ -73,7 +73,7 @@ class Frame:
         if returnArray:
             return out
         else:
-            self.setImage(out)
+            self.setImage(out, copyArray=False)
 
     
     def onScreen(self, scaleDownFactor=1, message = None):
@@ -115,7 +115,7 @@ class Frame:
         if returnArray:
             return out
         else:
-            self.setImage(out)
+            self.setImage(out, copyArray=False)
 
     def boundingBoxFromContour(self,contour,border=1):
         """Convenience method to find the bounding box of a contour. Output is a tuple
@@ -139,7 +139,7 @@ class Frame:
         if returnArray:
             return diff
         else:
-            self.setImage(diff)
+            self.setImage(diff, copyArray=False)
             return None
 
     def threshold(self, threshold, returnArray=False):
@@ -153,7 +153,7 @@ class Frame:
         if returnArray:
             return out
         else:
-            self.setImage(out)
+            self.setImage(out, copyArray=False)
             return None
                    
     def grayImage(self, returnArray=False, method=0):
@@ -185,7 +185,7 @@ class Frame:
         if returnArray:
             return gray
         else:
-            self.setImage(gray)
+            self.setImage(gray, copyArray=False)
             self.channels=1
             return None 
 
@@ -228,7 +228,7 @@ class Frame:
         if returnArray:
             return out
         else:
-            self.setImage(out)
+            self.setImage(out, copyArray=False)
             return None
 
     def dilate(self, kernel, dilIter, returnArray=False):
@@ -240,7 +240,7 @@ class Frame:
         if returnArray:
             return arr
         else:
-            self.setImage(arr)
+            self.setImage(arr, copyArray=False)
             return None
 
     def erode(self, kernel, erIter, returnArray=False):
@@ -252,7 +252,7 @@ class Frame:
         if returnArray:
             return arr
         else:
-            self.setImage(arr)
+            self.setImage(arr, copyArray=False)
             return None
 
     def binOpening(self, kernelRadius=3, kernelShape='circle', iterations=1, returnArray=False):
@@ -268,7 +268,7 @@ class Frame:
         if returnArray:
             return out
         else:
-            self.setImage(out.array)
+            self.setImage(out.array, copyArray=False)
             return None
 
     def binClosing(self, kernelRadius=3, kernelShape='circle', iterations=1, returnArray=False):
@@ -284,7 +284,7 @@ class Frame:
         if returnArray:
             return out
         else:
-            self.setImage(out.array)
+            self.setImage(out.array, copyArray=False)
             return None
 
     def findLargestBlobContours(self, kernelRadius=3, iterClosing=3, iterOpening=3):
