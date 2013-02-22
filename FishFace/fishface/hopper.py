@@ -7,8 +7,6 @@ import os
 class Hopper:
     """An iterable that returns Frame objects from files or a list of Frame objects."""
     
-    
-    
     def fillFromListOfFilenames(self, filenameList, directory=None):
         if directory:
             filenameList = [os.path.join(directory, filename)
