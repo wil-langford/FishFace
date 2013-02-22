@@ -29,7 +29,7 @@ class Poseidon:
         newPoseidon.rots = copy.deepcopy(self.rots, memodic)
         return newPoseidon
 
-    def __init__(self, array):
+    def __init__(self):
         pass
 
 # Definitions of custom exceptions
