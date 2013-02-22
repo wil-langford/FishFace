@@ -16,6 +16,7 @@ import cv2
 class Frame:
     def __init__(self, image):
         self.setImage(image)
+
     
     def setImage(self, image, copyArray=True):
         """The frame is getting a new image.  If it's already a numpy.array with
@@ -50,12 +51,14 @@ class Frame:
             elif len(self.shape) == 3:
                 self.channels = self.array.shape[2]
 
+
     def setImageFromFile(self,filename):
         """Get image from file and store as my array."""
         if os.path.isfile(filename):
             self.array = cv2.cvtColor(cv2.imread(filename), cv.CV_RGB2BGR)
         else:
             raise ImageInitError("File not found (or isn't a regular file): {}".format(filename))
+
 
     def saveImageToFile(self, filename):
         """Save the image to a file."""
@@ -64,19 +67,8 @@ class Frame:
         elif self.channels==3:
             cv2.imwrite(filename, cv2.cvtColor(self.array, cv.CV_BGR2RGB))              
 
-    def medianFilter(self, kernelRadius=1, returnArray=False):
-        """Apply median filtering to the image, storing/returning the result."""
-        out = np.copy(self.array)
-
-        out = cv2.medianBlur(out, kernelRadius)
-
-        if returnArray:
-            return out
-        else:
-            self.setImage(out, copyArray=False)
-
     
-    def onScreen(self, scaleDownFactor=1, message = None):
+    def onScreen(self, scaleFactor=1, message=None):
         """I need something to display these things for debugging. This uses
         Tkinter to display in a no-frills, click-to-dismiss window."""
         
@@ -93,7 +85,7 @@ class Frame:
         root.bind("<Key>", kill_window)
         
         im = Image.fromarray(self.array)        
-        im = im.resize((im.size[0]//scaleDownFactor, im.size[1]//scaleDownFactor))
+        im = im.resize((int(im.size[0]*scaleFactor), int(im.size[1]*scaleFactor)))
         
         photo = ImageTk.PhotoImage(im)
         
@@ -103,210 +95,224 @@ class Frame:
         
         root.mainloop()
 
-    def findEdges(self, returnArray=False, thickenEdges=True, thickener=3):
-        """Uses OpenCV's Canny filter implementation to find edges."""
-        
-        out = cv2.Canny(self.array, 50, 100, apertureSize=3)
-        
-        if thickenEdges:
-            se = self.kernel(thickener, shape="circle")
-            out = cv2.dilate(out,se)
-        
-        if returnArray:
-            return out
-        else:
-            self.setImage(out, copyArray=False)
 
-    def boundingBoxFromContour(self,contour,border=1):
-        """Convenience method to find the bounding box of a contour. Output is a tuple
-        of the form (y_min, x_min, y_max, x_max).  The border is an optional extra
-        margin to include in the cropped image."""
-        maxes = np.amax(contour, axis=1)[0,0]
-        mins  = np.amin(contour, axis=1)[0,0]
+    def applyMedianFilter(self, args=None):
+        """Apply median filtering to the array with a default kernel radius of 1."""
+        if 'kernelRadius' not in args:
+            args['kernelRadius']=1
         
-        return (max(mins[1] - border, 0),
-                max(mins[0] - border, 0),
-                min(maxes[1] + border, self.xdim-1),
-                min(maxes[0] + border, self.ydim-1))
+        cv2.medianBlur(src=self.array, ksize=args['kernelRadius'], dst=self.array)
 
-    def deltaImage(self, calImageFrame, returnArray=False):
-        """Finds the absolute difference between the calImage and my array,
-        then stores/returns the result."""
-        
-        diff = cv2.absdiff(calImageFrame.grayImage(returnArray=True),
-                           self.grayImage(returnArray=True))
-        
-        if returnArray:
-            return diff
-        else:
-            self.setImage(diff, copyArray=False)
-            return None
+    def applyCanny(self, args=None):
+        """Uses OpenCV's Canny filter implementation to find edges. By default, don't thicken the
+        edges, but dilate with a thickener-radius circular kernel if the thickener arg is given."""
 
-    def threshold(self, threshold, returnArray=False):
-        """Wrapper for the cv2 threshold function. Stores/returns result."""
+        if 'thickener' not in args:
+            args['thickener']=None
+        
+        self.array = cv2.Canny(src=self.array, threshold1=50, threshold2=100, apertureSize=3)
+        
+        if args['thickener']:
+            kern = self.kernel(args['thickener'], shape="circle")
+            cv2.dilate(src=self.array,kernel=kern,dst=self.array)
+
+    def applyThreshold(self, args=None):
+        """Wrapper for the cv2 threshold function."""
+
+        if 'threshold' not in args:
+            raise ImageProcessError("I need a threshold to apply.")
 
         # The [1] at the end is because we don't care what the retval is,
         # we just want the image back.
-        out = cv2.threshold(self.array, thresh=threshold,
-                            maxval=255, type=cv2.THRESH_BINARY)[1]
-        
-        if returnArray:
-            return out
-        else:
-            self.setImage(out, copyArray=False)
-            return None
-                   
-    def grayImage(self, returnArray=False, method=0):
-        """If my image is grayscale, return it.  Otherwise, convert to grayscale
-        and store/return the result."""
-        if self.array.ndim==2:
-            gray = np.copy(self.array)
-        elif self.array.ndim==3:
-            # I experimented with each method.  All seem to work fine with my test images
-            # so I'm using the fastest by default.
-            # The higher the number of the method, the longer it takes.
-            if method==0: # max of all three color values
-                gray = np.amax(self.array, axis=2)
-            elif method==1: # min of all three color values
-                gray = np.amin(self.array, axis=2)
-            elif method==2: # average of max color and min color
-                # this one may be broken by the use of modular addition in uint8 arrays
-                gray = (np.amax(self.array, axis=2) + np.amin(self.array, axis=2)) // 2
-            elif method==3: # average of all three colors
-                gray = np.sum(self.array, axis=2) // 3
-            elif method==4: # using the mean function and converting to integer
-                gray = np.mean(self.array, axis=2)
-                gray = np.uint8(gray)
-        else:
-            raise ImageProcessError("Image did not have either 1 or 3 channels. I don't know how to convert it to grayscale.")
-        
-        gray = np.uint8(gray)
-        
-        if returnArray:
-            return gray
-        else:
-            self.setImage(gray, copyArray=False)
-            self.channels=1
-            return None 
+        cv2.threshold(src=self.array,
+                      thresh=args['threshold'],
+                      maxval=255,
+                      type=cv2.THRESH_BINARY,
+                      dst=self.array)
 
-    def kernel(self, radius=3, shape="circle"):
-        """Convenience method wrapping the cv2.getStructuringElement method.
-        Radius and shape can be specified."""
+    def applyDeltaImage(self, args=None):
+        """Finds the absolute difference between the calImage and my array,
+        then stores/returns the result."""
+        
+        if 'calImageFrame' not in args:
+            raise ImageProcessError("I need a calibration image to calculate the delta.")
 
-        if shape=="circle":
-            shp = cv2.MORPH_ELLIPSE
-        elif shape=="cross":
-            shp = cv2.MORPH_CROSS
-        elif shape=="rectangle":        
-            shp = cv2.MORPH_RECT
-        else:
-            raise ImageProcessError("Couldn't create a kernel with shape: {}".format(shape))
-        return cv2.getStructuringElement(shp, (radius*2+1, radius*2+1) )
-                
-    def toTheBones(self, skelKernelRadius=1, skelKernelShape='circle', returnArray=False):
-        """Finds the morphological skeleton.  Kernel parameters are passed to
-        self.kernel, and the result is stored/returned."""
+        calFrame = args['calImageFrame']
+        
+        if not isinstance(calFrame,Frame):
+            raise ImageProcessError("The calibration image I received is not a Frame object.")
+        
+        if 'gray' in args:
+            if self.channels!=2:
+                self.applyGrayImage()
+            if calFrame.channels!=2:
+                calFrame = calFrame.copy()
+                calFrame.applyGrayImage()
+        
+        cv2.absdiff(src1=calFrame.array,
+                    src2=self.array,
+                    dst=self.array)
+        
+    def applyGrayImage(self, args=None):
+        """Convert to grayscale."""
+        if self.channels==3:
+            cv2.cvtColor(src=self.array, code=cv.CV_RGB2GRAY, dst=self.array)
+
+    def applyDilate(self, args=None):
+        """Morphological dilation with provided kernel."""
+        
+        if 'kernelRadius' in args:
+            args['kernel']=self.kernel(args['kernelRadius'])
+        
+        if 'kernel' not in args:
+            raise ImageProcessError("I need a kernel with which to dilate.")
+    
+        if 'iter' not in args:
+            args['iter']=1
+        
+        cv2.dilate(src=self.array, kernel=args['kernel'], dst=self.array, iterations=args['iter'])
+        
+    def applyErode(self, args=None):
+        """Morphological erosion with provided kernel."""         
+        if 'kernelRadius' in args:
+            args['kernel']=self.kernel(args['kernelRadius'])
+        
+        if 'kernel' not in args:
+            raise ImageProcessError("I need a kernel with which to dilate.")
+    
+        if 'iter' not in args:
+            args['iter']=1
+        
+        cv2.erode(src=self.array, kernel=args['kernel'], dst=self.array, iterations=args['iter'])
+
+    def applyOpening(self, args=None):
+        """Morphological opening with generated kernel.  It's essentially an erosion
+        followed by a dilation. Result is stored/returned."""
+        if 'kernelRadius' not in args:
+            args['kernelRadius']=3
+
+        if 'kernelShape' not in args:
+            args['kernelShape']='circle'
+        
+        if 'iterations' not in args:
+            args['iterations']=1
+        
+        kern = self.kernel(radius=args['kernelRadius'], shape=args['kernelShape'])
+
+        self.erode(kern, args['iterations'])
+        self.dilate(kern, args['iterations'])
+
+    def applyClosing(self, args=None):
+        """Morphological closing with generated kernel.  It's essentially a dilation
+        followed by an erosion. Result is stored/returned."""
+        if 'kernelRadius' not in args:
+            args['kernelRadius']=3
+
+        if 'kernelShape' not in args:
+            args['kernelShape']='circle'
+        
+        if 'iterations' not in args:
+            args['iterations']=1
+        
+        kern = self.kernel(radius=args['kernelRadius'], shape=args['kernelShape'])
+
+        self.dilate(kern, args['iterations'])
+        self.erode(kern, args['iterations'])
+
+    def drawCirclesAtPoints(self, args=None):
+        """Draws dots at each of the points in the list provided.  Various
+        attributes of the points (e.g. color, radius) can be specified."""
+
+        if 'points' not in args:
+            raise ImageProcessError("I need points at which to draw circles, but I got none.")
+        
+        if 'lineColor' not in args:
+            args['lineColor']=(255,0,255)
+        
+        if 'lineThickness' not in args:
+            args['lineThickness']=3
+
+        if 'filledIn' not in args:
+            args['filledIn']=True
+
+        if 'circleRadius' not in args:
+            args['circleRadius']=3
+
+        if args['filledIn']:
+            args['lineThickness'] = -abs(args['lineThickness'])
+
+        args['points'] = np.roll(args['points'], 1, axis=2)
+                    
+        if self.channels==1:
+            args['lineColor']=int(sum(args['lineColor'])/3)
+
+        for point in args['points']:
+            cv2.circle(img=self.array,
+                       center=tuple(point),
+                       radius=args['circleRadius'],
+                       color=args['lineColor'])
+
+    def applySkeletonize(self, args=None):
+        """Finds the morphological skeleton."""
+        
+        if self.channels>1:
+            raise ImageProcessError("I can only find the morphological skeleton of single-channel images, but I see {} channels.".format(self.channels))
+        
+        if 'skelKernelRadius' not in args:
+            args['skelKernelRadius'] = 1
+            
+        if 'skelKernelShape' not in args:
+            args['skelKernelShape'] = 1
+        
         src = np.copy(self.array)
         size = np.size(src)
-        out = np.zeros(src.shape,np.uint8)
 
-        se = self.kernel(radius=skelKernelRadius, shape=skelKernelShape)
+        kern = self.kernel(radius=args['skelKernelRadius'], shape=args['skelKernelShape'])
         
         complete = False
         
         while(not complete):
-            eroded = cv2.erode(src, se)
-            eph = cv2.dilate(eroded, se)
-            eph = cv2.subtract(src,eph)
-            out = cv2.bitwise_or(out,eph)
+            eroded = cv2.erode(src, kern)
+            temp = cv2.dilate(eroded, kern)
+            temp = cv2.subtract(src,temp)
+            self.array = cv2.bitwise_or(self.array,temp)
             src = np.copy(eroded)
         
             zeros = size - cv2.countNonZero(src)
             if zeros == size:
                 complete = True
 
-        if returnArray:
-            return out
-        else:
-            self.setImage(out, copyArray=False)
-            return None
-
-    def dilate(self, kernel, dilIter, returnArray=False):
-        """Morphological dilation with provided kernel. Result is stored/returned."""
-        arr = np.copy(self.array)
+    def findAllContours(self, fr=None):
+        """Returns a list of all contours in the single-channel image."""
         
-        arr = cv2.dilate(arr, kernel=kernel, iterations=dilIter)
-
-        if returnArray:
-            return arr
-        else:
-            self.setImage(arr, copyArray=False)
-            return None
-
-    def erode(self, kernel, erIter, returnArray=False):
-        """Morphological erosion with provided kernel. Result is stored/returned."""
-        arr = np.copy(self.array)
-
-        arr = cv2.erode(arr, kernel=kernel, iterations=erIter)
-
-        if returnArray:
-            return arr
-        else:
-            self.setImage(arr, copyArray=False)
-            return None
-
-    def binOpening(self, kernelRadius=3, kernelShape='circle', iterations=1, returnArray=False):
-        """Morphological opening with generated kernel.  It's essentially an erosion
-        followed by a dilation. Result is stored/returned."""
-        out = self.copy()
+        if fr=None:
+            fr=self
         
-        se = self.kernel(radius=kernelRadius, shape=kernelShape)
+        if fr.channels>1:
+            raise ImageProcessError("I can only find the morphological skeleton of single-channel images, but I see {} channels.".format(self.channels))
 
-        out.erode(se, iterations)
-        out.dilate(se, iterations)
+        # I don't care about the hierarchy; I just want the contours.
+        return cv2.findContours(fr.array, 
+                                mode=cv2.RETR_EXTERNAL,
+                                method=cv2.CHAIN_APPROX_SIMPLE
+                                )[0]
 
-        if returnArray:
-            return out
-        else:
-            self.setImage(out.array, copyArray=False)
-            return None
-
-    def binClosing(self, kernelRadius=3, kernelShape='circle', iterations=1, returnArray=False):
-        """Morphological closing with generated kernel.  It's essentially a dilation
-        followed by an erosion. Result is stored/returned."""
-        out = self.copy()
-        
-        se = self.kernel(radius=kernelRadius, shape=kernelShape)
-
-        out.dilate(se, iterations)
-        out.erode(se, iterations)
-
-        if returnArray:
-            return out
-        else:
-            self.setImage(out.array, copyArray=False)
-            return None
-
-    def findLargestBlobContours(self, kernelRadius=3, iterClosing=3, iterOpening=3):
+    def findLargestBlobContour(self, kernelRadius=3, iterClosing=3, iterOpening=3):
         """Returns a list of lists.  Each element of the list is a single contour,
         and the elements of each contour are the ordered coordinates of the contour."""
         
         temp = self.copy()
-        temp.grayImage()
         
-        temp.binClosing(kernelRadius=kernelRadius, iterations=iterClosing)
-        temp.binOpening(kernelRadius=kernelRadius, iterations=iterOpening)
-
-        # the [0] at the end is because we don't care about the hierarchy
-        contours = cv2.findContours(temp.array,
-                                    mode=cv2.RETR_EXTERNAL,
-                                    method=cv2.CHAIN_APPROX_SIMPLE
-                                    )[0]
+        temp.applyClosing(kernelRadius=kernelRadius, iterations=iterClosing)
+        temp.applyOpening(kernelRadius=kernelRadius, iterations=iterOpening)
         
+        contours = temp.allContours(args)
         areas = [cv2.contourArea(ctr) for ctr in contours]
         max_contour = [contours[areas.index(max(areas))]]
 
         return max_contour
+
+### FIXME: This is where I paused in the code-refactoring pass.
 
     def outlineLargestBlobWithContours(self, contours, lineColor=(255,0,255), lineThickness=3, filledIn=True):
         """Actually draws the provided contours onto the image."""
@@ -320,23 +326,6 @@ class Frame:
                          color=lineColor,
                          thickness=lineThickness)
 
-    def circlesAtPoints(self, points, lineColor=(255,0,255), lineThickness=3, filledIn=True, circleRadius=3):
-        """Draws dots at each of the points in the list provided.  Various
-        attributes of the points (e.g. color, radius) can be specified."""
-
-        if filledIn:
-            lineThickness = -abs(lineThickness)
-
-        points = np.roll(points, 1, axis=2)
-                    
-        if self.array.ndim==2:
-            lineColor=sum(lineColor)//3
-
-        for point in points:
-            cv2.circle(img=self.array,
-                       center=tuple(point),
-                       radius=circleRadius,
-                       color=lineColor)
 
     def drawOutlineAroundLargestBlob(self, calImageFrame, threshold=50, kernelRadius=3, lineColor=(255,0,255), lineThickness=3, filledIn=True):
         """Convenience method that finds the contours of the largest object
@@ -387,6 +376,32 @@ class Frame:
             return np.zeros(self.shape)
         if mode=="L":
             return np.zeros(self.spatialshape)
+
+    def boundingBoxFromContour(self,contour,border=1):
+        """Convenience method to find the bounding box of a contour. Output is a tuple
+        of the form (y_min, x_min, y_max, x_max).  The border is an optional extra
+        margin to include in the cropped image."""
+        maxes = np.amax(contour, axis=1)[0,0]
+        mins  = np.amin(contour, axis=1)[0,0]
+        
+        return (max(mins[1] - border, 0),
+                max(mins[0] - border, 0),
+                min(maxes[1] + border, self.xdim-1),
+                min(maxes[0] + border, self.ydim-1))
+
+    def kernel(self, radius=3, shape="circle"):
+        """Convenience method wrapping the cv2.getStructuringElement method.
+        Radius and shape can be specified."""
+
+        if shape=="circle":
+            shp = cv2.MORPH_ELLIPSE
+        elif shape=="cross":
+            shp = cv2.MORPH_CROSS
+        elif shape=="rectangle":        
+            shp = cv2.MORPH_RECT
+        else:
+            raise ImageProcessError("Couldn't create a kernel with shape: {}".format(shape))
+        return cv2.getStructuringElement(shp, (radius*2+1, radius*2+1) )
 
 
     def shallowcopy(self):
