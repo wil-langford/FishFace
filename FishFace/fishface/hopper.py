@@ -1,11 +1,41 @@
 #!/usr/bin/env python
 
-import copy
 import imageframe
 import os
 
+class HopperChain:
+    """Constructs a chain of Hopper objects to perform a specific set of image processing operations."""
+    pass
+
 class Hopper:
-    """An iterable that returns Frame objects from files or a list of Frame objects."""
+    """An iterable that returns imageframe.Frame objects from files or another
+    Hopper object."""
+    def setProcess(self, process=None):
+        if type(process)!=tuple or len(process)!=2 or type(process[0])!=str or type(process[1])!=dict:
+            raise HopperError("I need a 2-tuple containing the string name of the process to apply and its args dictionary.")
+        else:
+            self.processName = process[0]
+            self.processArgs = process[1]
+
+    def processFrame(self):
+        try:
+            processes = {
+                'canny' : self.frame.applyCanny,
+                'closing' : self.frame.applyClosing,
+                'crop' : self.frame.applyCrop,
+                'deltaImage' : self.frame.applyDeltaImage,
+                'dilate' : self.frame.applyDilate,
+                'erode' : self.frame.applyErode,
+                'grayImage' : self.frame.applyGrayImage,
+                'medianFilter' : self.frame.applyMedianFilter,
+                'opening' : self.frame.applyOpening,
+                'skeletonize' : self.frame.applySkeletonize,
+                'threshold' : self.frame.applyThreshold
+            }
+
+            processes[self.processName](self.processArgs)
+        except AttributeError:
+            pass
     
     def fillFromListOfFilenames(self, filenameList, directory=None):
         if directory:
@@ -63,36 +93,6 @@ class Hopper:
     
     def __iter__(self):
         return self
-            
-    def shallowcopy(self):
-        """Return a non-deep copy of this object."""
-        return self.__copy__()
-
-    def copy(self):
-        """Return a deep copy of this object."""
-        return self.__deepcopy__()
-        
-    def __copy__(self):
-        """The actual implementation of the object shallowcopy() method.  Named so that
-        the copy module can find it."""
-        newHopper = Hopper([])
-        if self.parentHopper:
-            newHopper.parentHopper = self.parentHopper
-        else:
-            newHopper.contents = self.contents
-        newHopper.cur = self.cur
-        return newHopper
-
-    def __deepcopy__(self, memodic=None):
-        """The actual implementation of the object copy() method.  Named so that
-        the copy module can find it."""
-        newHopper = Hopper([])
-        if self.parentHopper:
-            newHopper.parentHopper = self.parentHopper
-        else:
-            newHopper.contents = copy.deepcopy(self.contents, memodic)
-        newHopper.cur = self.cur
-        return newHopper
 
 class HopperError(Exception):
     pass
