@@ -281,11 +281,14 @@ class Frame:
     def applyCropToLargestBlob(self, args=dict()):
         contours = self.findAllContours()
         areas = [cv2.contourArea(ctr) for ctr in contours]
-        max_contour = [contours[areas.index(max(areas))]]
-        self.drawContours({'contours':max_contour})
+        if len(areas):
+            max_contour = [contours[areas.index(max(areas))]]
+            self.drawContours({'contours':max_contour})
         
-        boundingBox = self.boundingBoxFromContour(max_contour)
-        self.applyCrop({'box':boundingBox})
+            boundingBox = self.boundingBoxFromContour(max_contour)
+            self.applyCrop({'box':boundingBox})
+        else:
+            print "No contours found in this frame."
 
 ###
 ###  Drawing methods

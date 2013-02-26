@@ -82,7 +82,7 @@ class Poseidon:
         # FIXME: this is hard coded becuase it's valid for all the test data
         self.precropBox = (107,126,1302,1292)
 
-        self.DEBUG=True
+        self.DEBUG=False
 
         self.calImage = None
 
