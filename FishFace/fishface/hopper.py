@@ -50,6 +50,7 @@ class Hopper:
                 'erode' : self.frame.applyErode,
                 'grayImage' : self.frame.applyGrayImage,
                 'medianFilter' : self.frame.applyMedianFilter,
+                'null' : self.frame.applyNull,
                 'onScreen' : self.frame.onScreen,
                 'opening' : self.frame.applyOpening,
                 'preserveArray' : self.frame.preserveArray,
