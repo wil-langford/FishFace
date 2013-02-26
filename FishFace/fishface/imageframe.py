@@ -19,8 +19,11 @@ class Frame:
 ###  Object Initialization
 ###
     def __init__(self, image):
-        self.setImage(image)
+        self.originalFilename=None
+        self.originalFileShape=None
         self.preservedArrays=[]
+
+        self.setImage(image)
     
     def setImage(self, image, copyArray=True):
         """The frame is getting a new image.  If it's already a numpy.array with
@@ -62,6 +65,8 @@ class Frame:
         """Get image from file and store as my array."""
         if os.path.isfile(filename):
             self.array = cv2.cvtColor(cv2.imread(filename), cv.CV_RGB2BGR)
+            self.originalFilename=filename
+            self.originalFileShape = self.array.shape
         else:
             raise ImageInitError("File not found (or isn't a regular file): {}".format(filename))
 
@@ -111,6 +116,10 @@ class Frame:
 ###
 ###  Array-alterations
 ###
+
+    def applyNull(self, args=dict()):
+        pass
+
     def applyMedianFilter(self, args=dict()):
         """Apply median filtering to the array with a default kernel radius of 1."""
         if 'kernelRadius' not in args:
@@ -409,6 +418,8 @@ class Frame:
         """The actual implementation of the object shallowcopy() method.  Named so that
         the copy module can find it."""
         newFrame = Frame(self.array, copyArray=False)
+        newFrame.originalFilename = self.originalFilename
+        newFrame.originalFileShape = self.originalFileShape
         return newFrame
 
     def __deepcopy__(self, memodic=None):
@@ -416,6 +427,8 @@ class Frame:
         the copy module can find it."""
         newFrame = Frame(np.zeros(self.shape))
         newFrame.array = np.copy(self.array)
+        newFrame.originalFilename = self.originalFilename
+        newFrame.originalFileShape = self.originalFileShape
         return newFrame
 
 
