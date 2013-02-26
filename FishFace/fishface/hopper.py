@@ -4,8 +4,29 @@ import imageframe
 import os
 
 class HopperChain:
-    """Constructs a chain of Hopper objects to perform a specific set of image processing operations."""
-    pass
+    """An iterable that constructs a chain of Hopper objects to perform a specific
+    set of image processing operations.  Each time HopperChain.next() is called,
+    it returns the next frame from the last hopper in the chain."""
+
+    def __init__(self, firstHopperInput, processList):
+        self.chain = [Hopper(firstHopperInput)]
+
+        if type(processList)!=list:
+            raise HopperChainError("I need a list of processes (and their arguments) but I got a(n) {} instead.".format(type(processList)))
+        else:
+            for process in processList:
+                if len(process)!=2:
+                    raise HopperChainError("The processList must contain 2-element lists or tuples whose elements are the name of the process and its arguments.")
+                else:
+                    self.chain.append(Hopper(self.chain[-1]))
+                    self.chain[-1].setProcess(process)
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.chain[-1].next()
+    
 
 class Hopper:
     """An iterable that returns imageframe.Frame objects from files or another
@@ -23,12 +44,15 @@ class Hopper:
                 'canny' : self.frame.applyCanny,
                 'closing' : self.frame.applyClosing,
                 'crop' : self.frame.applyCrop,
+                'cropToLargestBlob' : self.frame.applyCropToLargestBlob,
                 'deltaImage' : self.frame.applyDeltaImage,
                 'dilate' : self.frame.applyDilate,
                 'erode' : self.frame.applyErode,
                 'grayImage' : self.frame.applyGrayImage,
                 'medianFilter' : self.frame.applyMedianFilter,
+                'onScreen' : self.frame.onScreen,
                 'opening' : self.frame.applyOpening,
+                'preserveArray' : self.frame.preserveArray,
                 'skeletonize' : self.frame.applySkeletonize,
                 'threshold' : self.frame.applyThreshold
             }
@@ -93,6 +117,9 @@ class Hopper:
     
     def __iter__(self):
         return self
+
+class HopperChainError(Exception):
+    pass
 
 class HopperError(Exception):
     pass

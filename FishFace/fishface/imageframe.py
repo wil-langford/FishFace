@@ -20,6 +20,7 @@ class Frame:
 ###
     def __init__(self, image):
         self.setImage(image)
+        self.preservedArrays=[]
     
     def setImage(self, image, copyArray=True):
         """The frame is getting a new image.  If it's already a numpy.array with
@@ -75,15 +76,18 @@ class Frame:
 ###
 ###  Debug display
 ###
-    def onScreen(self, scaleFactor=1, message=None):
+    def onScreen(self, args=dict()):
         """I need something to display these things for debugging. This uses
         Tkinter to display in a no-frills, click-to-dismiss window."""
         
-        if message == None:
-            message = "image display - any key or click to close"
-        
+        if 'message' not in args:
+            args['message'] = "image display - any key or click to close"
+
+        if 'scaleFactor' not in args:
+            args['scaleFactor'] = 1        
+
         root = tk.Tk()
-        root.title(message)
+        root.title(args['message'])
         
         def kill_window(event):
             root.destroy()
@@ -92,7 +96,8 @@ class Frame:
         root.bind("<Key>", kill_window)
         
         im = Image.fromarray(self.array)        
-        im = im.resize((int(im.size[0]*scaleFactor), int(im.size[1]*scaleFactor)))
+        im = im.resize((int(im.size[0]*args['scaleFactor']),
+                        int(im.size[1]*args['scaleFactor'])))
         
         photo = ImageTk.PhotoImage(im)
         
@@ -149,8 +154,8 @@ class Frame:
 
         calFrame = args['calImageFrame']
         
-        if not isinstance(calFrame,Frame):
-            raise ImageProcessError("The calibration image I received is not a Frame object.")
+        # if not isinstance(calFrame,Frame):
+        #     raise ImageProcessError("The calibration image I received is not a Frame object.")
         
         if 'gray' in args:
             if self.channels!=2:
@@ -273,7 +278,14 @@ class Frame:
 
         self.setImage(self.array[box[0]:box[2], box[1]:box[3]])
 
-
+    def applyCropToLargestBlob(self, args=dict()):
+        contours = self.findAllContours()
+        areas = [cv2.contourArea(ctr) for ctr in contours]
+        max_contour = [contours[areas.index(max(areas))]]
+        self.drawContours({'contours':max_contour})
+        
+        boundingBox = self.boundingBoxFromContour(max_contour)
+        self.applyCrop({'box':boundingBox})
 
 ###
 ###  Drawing methods
@@ -332,14 +344,18 @@ class Frame:
                          color=args['lineColor'],
                          thickness=args['lineThickness'])
 
-
+###
 ###  Information and convenience methods
+###
+
+    def preserveArray(self, args=None):
+        self.preservedArrays.append(np.copy(self.array))
 
     def findAllContours(self):
         """Returns a list of all contours in the single-channel image."""
         
         if self.channels>1:
-            raise ImageProcessError("I can only find the morphological skeleton of single-channel images, but I see {} channels.".format(self.channels))
+            raise ImageProcessError("I can only find contours in single-channel images, but I see {} channels.".format(self.channels))
 
         # I don't care about the hierarchy; I just want the contours.
         return cv2.findContours(self.array, 

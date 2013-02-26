@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-import copy
-# import cv2
+import hopper
+import imageframe
+import cv2
+import os
 
 class Poseidon:
     """A batch processing object that handles various operations
@@ -10,25 +12,31 @@ class Poseidon:
 ### FIXME: Everything from here to the ENDFIXME tag below is copied directly from
 ### imageframe.py and needs to be rewritten for Poseidon.
 
-    def cropToLargestBlob(self, calImageFrame, threshold=50, kernelRadius=3, returnArray=False, lineColor=(255,0,255), lineThickness=3, filledIn=True):
-        """Convenience method that crops the image to the largest object in it."""
+    def cropToLargestBlob(self, source, lineColor=(255,0,255), lineThickness=3, filledIn=True, justOutline=True):
 
-        out = self.copy()
-        
-        out.deltaImage(calImageFrame)
-        out.threshold(threshold)        
-        ctr = out.findLargestBlobContours(kernelRadius=kernelRadius)
-    
-        out.setImage(out.blankImageCopy())    
-        out.outlineLargestBlobWithContours(ctr, lineColor, lineThickness, filledIn)
-                        
-        out.applyCrop(out.boundingBoxFromContour(ctr))
+        chainProcessList = []
 
-        if returnArray:
-            return out.array
-        else:
-            self.setImage(out.array)
-            return None
+        if not justOutline:
+            chainProcessList.append(('preserveArray', {}))
+
+        if self.precropBox:
+            chainProcessList.append(('crop', {'box':self.precropBox}))
+
+        self.refreshPresets()
+        chainProcessList.extend(self.presets['LARGEST_BLOB'])
+
+        if self.DEBUG:
+            chainProcessList.append(('onScreen',{}))
+
+        HC = hopper.HopperChain(source, chainProcessList)
+
+        for fr in HC:
+            path = HC.chain[0].contents[HC.chain[0].cur]
+            directory, filename = os.path.split(path)
+            outpath = os.path.join(directory, "../output", "blob-" + filename)
+            fr.saveImageToFile(outpath)
+
+
 
     def drawOutlineAroundLargestBlob(self, calImageFrame, threshold=50, kernelRadius=3, lineColor=(255,0,255), lineThickness=3, filledIn=True):
         """Convenience method that finds the contours of the largest object
@@ -59,31 +67,26 @@ class Poseidon:
 
 ### ENDFIXME
 
+    def refreshPresets(self):
+        self.presets['LARGEST_BLOB']=[
+            ('deltaImage', {'calImageFrame':self.calImage}),
+            ('grayImage', {}),
+            ('threshold',{'threshold':60}),
+            ('closing',{'kernelRadius':3}),
+            ('opening',{'kernelRadius':3}),
+            ('cropToLargestBlob',{})
+            ]
 
-    def shallowcopy(self):
-        """Return a non-deep copy of this object."""
-        return self.__copy__()
-
-    def copy(self):
-        """Return a deep copy of this object."""
-        return self.__deepcopy__()
-        
-    def __copy__(self):
-        """The actual implementation of the object shallowcopy() method.  Named so that
-        the copy module can find it."""
-        newPoseidon = Poseidon(self.array, copyArray=False)
-        newPoseidon.rots = self.rots
-        return newPoseidon
-
-    def __deepcopy__(self, memodic=None):
-        """The actual implementation of the object copy() method.  Named so that
-        the copy module can find it."""
-        newPoseidon = Poseidon(self.array, copyArray=True)
-        newPoseidon.rots = copy.deepcopy(self.rots, memodic)
-        return newPoseidon
 
     def __init__(self):
-        pass
+        # FIXME: this is hard coded becuase it's valid for all the test data
+        self.precropBox = (107,126,1302,1292)
+
+        self.DEBUG=True
+
+        self.calImage = None
+
+        self.presets=dict()
 
 # Definitions of custom exceptions
 
