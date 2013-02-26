@@ -1,21 +1,67 @@
 #!/usr/bin/env python
 
 import copy
-
 import numpy as np
 from scipy import ndimage
+
+import Tkinter as tk
+import Image, ImageTk
+
 
 ### Both lines below do the same thing in the actual Python interpreter,
 ### but PyDev/Eclipse wants the second one for autocomplete and code
 ### analysis to work. 
 # import cv
-# import cv2.cv as cv
-# import cv2
+#import cv2.cv as cv
+
+import cv2
 
 class Poser:
+
+    def findLongAxis(self, samples=10, iterations=2):
+
+        #  Since we're just trying to find the angle of the axis with this
+        #  method, 0-180 is sufficient.  We'll decide which direction the
+        #  axis points later with analysis of the extrema.
+        
+        #  Having said that, I'm going to take the cheap way out to fix the
+        #  overlap case (where the candidate angle is near zero) by extending
+        #  the stopAngle by several steps and only considering the candidates
+        #  in the "middle" 180 degrees.
+        
+        startAngle = 0
+        stopAngle = 180+(int(180/samples)*4)
+
+        for i in range(iterations):
+            stepsize = int((stopAngle - startAngle)/samples)
+            for angle in range(startAngle,stopAngle,stepsize):
+                self.rotate(angle)
+                self.horsum(angle)
+
+            ks = list(self.horsums.keys())
+            vs = [np.amax(hs) for hs in self.horsums.values()]
+            max_length = max(vs[2:-2])
+            candidate = ks[vs.index(max_length)]
+
+            startAngle = max(0, candidate - stepsize)
+            stopAngle = min(180+(4*stepsize), candidate + stepsize)
+            
+            # So I stop getting unused variable warnings.
+            i += 0
+
+        # The actual angle of the fish is the inverse of the candidate,
+        # because we rotated the whole array and then measured along one axis.
+        # Also, because at this point we only know a line parallel to the long
+        # axis and not the orientation of that axis, 180 is as good as 360.
+        return int((-candidate) % 360)
+    
+    
     def _rotate(self, degrees):
         """Use the scipy image rotation method on my array."""
-        return ndimage.interpolation.rotate(self.array, degrees)
+        im = ndimage.interpolation.rotate(self.array, degrees % 360)
+        cv2.threshold(src=im, dst=im, thresh=128, maxval=255, type=cv2.THRESH_BINARY)
+        return im
+
 
     def rotate(self, degrees):
         """Caching rotation finder.  Stores the result of each rotation to
@@ -33,7 +79,7 @@ class Poser:
         if arr==None:
             arr=self.array
 
-        return np.sum(arr, axis=1)
+        return np.sum(arr, axis=1)/255
 
     def horsum(self, degrees):
         """Caching horizontal sum finder.  Stores the result of each horizontal
@@ -49,42 +95,37 @@ class Poser:
 
         return self.horsums[degrees]
 
-    def findLongAxis(self, samples=10, iterations=2):
+    def onScreen(self,degrees=None):
+        """I need something to display these things for debugging. This uses
+        Tkinter to display in a no-frills, click-to-dismiss window."""
+        
+        if degrees:
+            im = Image.fromarray(self.rotate(degrees))
+            msg = "{} degree rotation - any key/click to continue".format(degrees)
+        else:
+            im = Image.fromarray(self.array)
+            msg = "any key/click to continue"
 
-        #  Since we're just trying to find the angle of the axis with this
-        #  method, 0-180 is sufficient.  We'll decide which direction the
-        #  axis points later with analysis of the extrema.
-        startAngle = 0
-        stopAngle = 180
+        root = tk.Tk()
+        root.title(msg)
+        
+        def kill_window(event):
+            root.destroy()
+        
+        root.bind("<Button>", kill_window)
+        root.bind("<Key>", kill_window)
+        
+        im = im.resize((int(im.size[0]),
+                        int(im.size[1])))
+        
+        photo = ImageTk.PhotoImage(im)
+        
+        lbl = tk.Label(root, image=photo)
+        lbl.image = photo
+        lbl.pack()
+        
+        root.mainloop()
 
-        for i in range(iterations):
-            stepsize = int((stopAngle - startAngle)/samples)
-            for angle in range(startAngle,stopAngle,stepsize):
-                self.rotate(angle)
-                self.horsum(angle)
-
-            ks = list(self.horsums.keys())
-            vs = [np.amax(hs) for hs in self.horsums.values()]
-            max_length = max(vs)
-            candidate = ks[vs.index(max_length)]
-
-
-            ### FIXME: This doesn't handle the cases where the candidate
-            ### window overlaps the 0/180 rotation.
-            startAngle = max(0, candidate - stepsize)
-            stopAngle = min(180, candidate + stepsize)
-            
-            # So I stop getting unused variable warnings.
-            i += 0
-
-        # The actual angle of the fish is the inverse of the candidate,
-        # because we rotated the whole array and then measured along one axis.
-        # Also, because at this point we only know a line parallel to the long
-        # axis and not the orientation of that axis, 180 is as good as 360.
-        return 180 - candidate
-
-
-    
     def setArray(self, array, copyArray=True):
         # It's a numpy array. Store or copy it. 
         if(type(array)==np.ndarray):
@@ -103,6 +144,9 @@ class Poser:
         else:
             raise ArrayInitError("setArray requires a two-dimensional numpy array, but I see {} dimensions.".format(len(self.shape)))
 
+        cv2.threshold(src=self.array, dst=self.array, thresh=128, maxval=255, type=cv2.THRESH_BINARY)
+
+
     def shallowcopy(self):
         """Return a non-deep copy of this object."""
         return self.__copy__()
@@ -116,6 +160,7 @@ class Poser:
         the copy module can find it."""
         newPoser = Poser(self.array, copyArray=False)
         newPoser.rots = self.rots
+        newPoser.horsums = self.horsums
         return newPoser
 
     def __deepcopy__(self, memodic=None):
@@ -123,6 +168,7 @@ class Poser:
         the copy module can find it."""
         newPoser = Poser(self.array, copyArray=True)
         newPoser.rots = copy.deepcopy(self.rots, memodic)
+        newPoser.rots = copy.deepcopy(self.horsums, memodic)
         return newPoser
 
     def __init__(self, array):

@@ -2,17 +2,45 @@
 
 import hopper
 import imageframe
+import poser
 import cv2
 import os
+import numpy as np
+import math
 
 class Poseidon:
     """A batch processing object that handles various operations
     on lists or ranges of files/images."""
 
-### FIXME: Everything from here to the ENDFIXME tag below is copied directly from
-### imageframe.py and needs to be rewritten for Poseidon.
+    def saveHorizontalSilhouette(self, source, lineColor=(255,0,255), lineThickness=3):
+ 
+        HC = hopper.HopperChain(source, [('null',{})])
+        
+        for fr in HC:
+            
+            if fr.xdim + fr.ydim <600:
+                frgray = fr.copy()
+                frgray.applyGrayImage()
+                po = poser.Poser(frgray.array)
+                
+                axisAngle = po.findLongAxis()
+    
+                # cv2.line(fr.array, (50,50), (int(40*math.sin(axisAngle)),int(40*math.cos(axisAngle))), lineColor)
+                
+                frhor = imageframe.Frame(po.rotate(-axisAngle))
+                # frgray.onScreen({'msg':"angle {}".format(axisAngle)})
 
-    def cropToLargestBlob(self, source, lineColor=(255,0,255), lineThickness=3, filledIn=True, justOutline=True):
+                path = HC.chain[0].contents[HC.chain[0].cur]
+                directory, filename = os.path.split(path)
+                outpath = os.path.join(directory, "../horizontal","hor-" + filename)
+                frhor.saveImageToFile(outpath)
+                
+            else:
+                print "skipped {}".format(fr.originalFilename)
+
+    def saveLargestBlobs(self, source, lineColor=(255,0,255), lineThickness=3, filledIn=True, justOutline=True):
+
+        # FIXME: This logic would be better placed at the hopper level.
 
         chainProcessList = []
 
@@ -31,43 +59,16 @@ class Poseidon:
         HC = hopper.HopperChain(source, chainProcessList)
 
         for fr in HC:
+            print "original filename: {}".format(fr.originalFilename)
             path = HC.chain[0].contents[HC.chain[0].cur]
             directory, filename = os.path.split(path)
             outpath = os.path.join(directory, "../output", "blob-" + filename)
             fr.saveImageToFile(outpath)
 
-
-
-    def drawOutlineAroundLargestBlob(self, calImageFrame, threshold=50, kernelRadius=3, lineColor=(255,0,255), lineThickness=3, filledIn=True):
-        """Convenience method that finds the contours of the largest object
-        and then draws them onto the image."""
-        child = self.copy()
-        
-        child.deltaImage(calImageFrame)
-        child.threshold(threshold)
-        
-        self.outlineLargestBlobWithContours(
-                    child.findLargestBlobContours(kernelRadius=kernelRadius),
-                    lineColor, lineThickness, filledIn)
-
-    def findLargestBlobContour(self, kernelRadius=3, iterClosing=3, iterOpening=3):
-        """Returns a list of lists.  Each element of the list is a single contour,
-        and the elements of each contour are the ordered coordinates of the contour."""
-        # I'm creating a temporary Frame because this isn't an apply* method.
-        temp = self.copy()
-
-        temp.applyClosing(kernelRadius=kernelRadius, iterations=iterClosing)
-        temp.applyOpening(kernelRadius=kernelRadius, iterations=iterOpening)
-        
-        contours = temp.allContours(args)
-        areas = [cv2.contourArea(ctr) for ctr in contours]
-        max_contour = [contours[areas.index(max(areas))]]
-
-        return max_contour
-
-### ENDFIXME
-
     def refreshPresets(self):
+
+        # FIXME: This logic would be better placed at the hopper level.
+
         self.presets['LARGEST_BLOB']=[
             ('deltaImage', {'calImageFrame':self.calImage}),
             ('grayImage', {}),
