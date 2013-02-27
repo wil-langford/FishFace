@@ -7,40 +7,83 @@ import cv2
 import os
 import numpy as np
 import math
+from scipy import ndimage
 
 class Poseidon:
     """A batch processing object that handles various operations
     on lists or ranges of files/images."""
 
-    def saveHorizontalSilhouette(self, source, lineColor=(255,0,255), lineThickness=3):
+    def saveLeftFacingSilhouette(self, source, lineColor=(255,0,255), lineThickness=3):
  
         HC = hopper.HopperChain(source, [('null',{})])
         
         for fr in HC:
             
-            if fr.xdim + fr.ydim <600:
+            if fr.xdim + fr.ydim<600:
                 frgray = fr.copy()
                 frgray.applyGrayImage()
                 po = poser.Poser(frgray.array)
                 
                 axisAngle = po.findLongAxis()
-    
-                # cv2.line(fr.array, (50,50), (int(40*math.sin(axisAngle)),int(40*math.cos(axisAngle))), lineColor)
                 
                 frhor = imageframe.Frame(po.rotate(-axisAngle))
-                # frgray.onScreen({'msg':"angle {}".format(axisAngle)})
 
+                mid_x = int(frhor.xdim/2)
+
+                leftsum = np.sum(frhor.array[:,:mid_x])
+                rightsum = np.sum(frhor.array[:,mid_x:])
+
+                print "If this is a shape, then we're getting some data all the way from the beginning of the chain: {}".format(fr.originalFileShape)
+                print "If this is None, then we aren't getting the croppedTo data: {}".format(fr.croppedTo)
+
+                if leftsum < rightsum:
+                    frhor.setImage(ndimage.interpolation.rotate(frhor.array, 180))
+                    axisAngle = axisAngle+180 % 360
+                    
                 path = HC.chain[0].contents[HC.chain[0].cur]
                 directory, filename = os.path.split(path)
-                outpath = os.path.join(directory, "../horizontal","hor-" + filename)
+                outpath = os.path.join(directory, "../output","leftface-" + filename)
                 frhor.saveImageToFile(outpath)
                 
             else:
-                print "skipped {}".format(fr.originalFilename)
+                print "skipped {}".format(fr.originalFileName)
+
+    def extremaAnalysis(self, array, alsoReturnMinima=False):
+                array = np.copy(array)
+                array[array>0]=1
+
+                perpSum = np.int32(np.sum(array, axis=0))
+                deltas = np.diff(perpSum)
+
+                minima = []
+                maxima = []
+
+                last_d = deltas[0]
+                for d_enum in enumerate(deltas):
+                    d = d_enum[1]
+                    if math.copysign(1,d)>math.copysign(1,last_d):
+                        # local minimum
+                        minima.append([d_enum[0],perpSum[d_enum[0]]])
+
+                    if math.copysign(1,d)<math.copysign(1,last_d):
+                        # local maximum
+                        maxima.append([d_enum[0],perpSum[d_enum[0]]])
+
+                    # If we're not on a plateau or a flat valley,
+                    # save d to last_d; otherwise, carry over the last_d
+                    # to next time.
+                    if d:
+                        last_d=d
+
+                if alsoReturnMinima:
+                    return maxima, minima
+                else:
+                    return maxima
+
 
     def saveLargestBlobs(self, source, lineColor=(255,0,255), lineThickness=3, filledIn=True, justOutline=True):
 
-        # FIXME: This logic would be better placed at the hopper level.
+        # FIXME: This logic would be better placed at the hopper or even imageframe level.
 
         chainProcessList = []
 
@@ -59,7 +102,7 @@ class Poseidon:
         HC = hopper.HopperChain(source, chainProcessList)
 
         for fr in HC:
-            print "original filename: {}".format(fr.originalFilename)
+            print "original filename: {}".format(fr.originalFileName)
             path = HC.chain[0].contents[HC.chain[0].cur]
             directory, filename = os.path.split(path)
             outpath = os.path.join(directory, "../output", "blob-" + filename)

@@ -19,8 +19,9 @@ class Frame:
 ###  Object Initialization
 ###
     def __init__(self, image):
-        self.originalFilename=None
-        self.originalFileShape=None
+        self.originalFileName = None
+        self.originalFileShape = None
+        self.croppedTo = None
         self.preservedArrays=[]
 
         self.setImage(image)
@@ -65,7 +66,7 @@ class Frame:
         """Get image from file and store as my array."""
         if os.path.isfile(filename):
             self.array = cv2.cvtColor(cv2.imread(filename), cv.CV_RGB2BGR)
-            self.originalFilename=filename
+            self.originalFileName=filename
             self.originalFileShape = self.array.shape
         else:
             raise ImageInitError("File not found (or isn't a regular file): {}".format(filename))
@@ -283,7 +284,13 @@ class Frame:
 
         # save the last shape and the bounding box for future reference
         self.last_shape = self.shape
-        self.cropped_to = box
+
+        if self.croppedTo:
+            sct = self.croppedTo
+            addme = (sct[0], sct[1], sct[0], sct[1])
+            self.croppedTo = [a + b for a,b in zip(box, addme)]
+        else:
+            self.croppedTo = box
 
         self.setImage(self.array[box[0]:box[2], box[1]:box[3]])
 
@@ -418,8 +425,9 @@ class Frame:
         """The actual implementation of the object shallowcopy() method.  Named so that
         the copy module can find it."""
         newFrame = Frame(self.array, copyArray=False)
-        newFrame.originalFilename = self.originalFilename
+        newFrame.originalFileName = self.originalFileName
         newFrame.originalFileShape = self.originalFileShape
+        newFrame.croppedTo = self.croppedTo
         return newFrame
 
     def __deepcopy__(self, memodic=None):
@@ -427,8 +435,9 @@ class Frame:
         the copy module can find it."""
         newFrame = Frame(np.zeros(self.shape))
         newFrame.array = np.copy(self.array)
-        newFrame.originalFilename = self.originalFilename
+        newFrame.originalFileName = self.originalFileName
         newFrame.originalFileShape = self.originalFileShape
+        newFrame.croppedTo = self.croppedTo
         return newFrame
 
 
