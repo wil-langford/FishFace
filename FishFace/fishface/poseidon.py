@@ -15,7 +15,21 @@ class Poseidon:
 
     def saveLeftFacingSilhouette(self, source, lineColor=(255,0,255), lineThickness=3):
  
-        HC = hopper.HopperChain(source, [('null',{})])
+        chainProcessList = []
+
+        if not justOutline:
+            chainProcessList.append(('preserveArray', {}))
+
+        if self.precropBox:
+            chainProcessList.append(('crop', {'box':self.precropBox}))
+
+        self.refreshPresets()
+        chainProcessList.extend(self.presets['LARGEST_BLOB'])
+
+        if self.DEBUG:
+            chainProcessList.append(('onScreen',{}))
+
+        HC = hopper.HopperChain(source, chainProcessList)
         
         for fr in HC:
             
