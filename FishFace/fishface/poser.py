@@ -5,7 +5,8 @@ import numpy as np
 from scipy import ndimage
 
 import Tkinter as tk
-import Image, ImageTk
+from PIL import ImageTk
+from PIL import Image
 
 
 ### Both lines below do the same thing in the actual Python interpreter,

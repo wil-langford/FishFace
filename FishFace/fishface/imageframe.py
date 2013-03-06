@@ -3,7 +3,8 @@
 import numpy as np
 import os
 import Tkinter as tk
-import Image, ImageTk
+from PIL import ImageTk
+from PIL import Image
 # import copy
 
 ### Both lines below do the same thing in the actual Python interpreter,
