@@ -3,6 +3,7 @@
 import copy
 # import cv2
 
+
 class Nugget:
     """A batch processing object that handles various operations
     on lists or ranges of files/images."""
@@ -14,7 +15,7 @@ class Nugget:
     def copy(self):
         """Return a deep copy of this object."""
         return self.__deepcopy__()
-        
+
     def __copy__(self):
         """The actual implementation of the object shallowcopy() method.  Named so that
         the copy module can find it."""
@@ -34,8 +35,10 @@ class Nugget:
 
 # Definitions of custom exceptions
 
+
 class ArrayInitError(Exception):
     pass
+
 
 class ArrayProcessError(Exception):
     pass
