@@ -3,18 +3,18 @@
 import hopper
 import imageframe
 import poser
-import cv2
+# import cv2
 import os
 import numpy as np
 import math
-from scipy import ndimage
+# from scipy import ndimage
 
 
 class Poseidon:
     """A batch processing object that handles various operations
     on lists or ranges of files/images."""
 
-    def saveLeftFacingSilhouette(self, source, lineColor=(255, 0, 255), lineThickness=3):
+    def saveLeftFacingSilhouette(self, source, lineColor=(255, 0, 255), lineThickness=3, justOutline=True):
 
         chainProcessList = []
 
@@ -41,24 +41,12 @@ class Poseidon:
 
                 axisAngle = po.findLongAxis()
 
-                frhor = imageframe.Frame(po.rotate(-axisAngle))
-
-                mid_x = int(frhor.xdim / 2)
-
-                leftsum = np.sum(frhor.array[:, :mid_x])
-                rightsum = np.sum(frhor.array[:, mid_x:])
-
-                print "If this is a shape, then we're getting some data all the way from the beginning of the chain: {}".format(fr.originalFileShape)
-                print "If this is None, then we aren't getting the croppedTo data: {}".format(fr.croppedTo)
-
-                if leftsum < rightsum:
-                    frhor.setImage(ndimage.interpolation.rotate(frhor.array, 180))
-                    axisAngle = axisAngle + 180 % 360
+                frleft = imageframe.Frame(po.rotate(-axisAngle))
 
                 path = HC.chain[0].contents[HC.chain[0].cur]
                 directory, filename = os.path.split(path)
                 outpath = os.path.join(directory, "../output", "leftface-" + filename)
-                frhor.saveImageToFile(outpath)
+                frleft.saveImageToFile(outpath)
 
             else:
                 print "skipped {}".format(fr.originalFileName)
@@ -136,7 +124,8 @@ class Poseidon:
         ]
 
     def __init__(self):
-        # FIXME: this is hard coded becuase it's valid for all the test data
+        # FIXME: this is hard coded because it's valid for all the test data I have
+        print "WARNING: Preprocessing crop box is hard coded!"
         self.precropBox = (107, 126, 1302, 1292)
 
         self.DEBUG = False

@@ -24,7 +24,7 @@ class Poser:
 
         #  Since we're just trying to find the angle of the axis with this
         #  method, 0-180 is sufficient.  We'll decide which direction the
-        #  axis points later with analysis of the extrema.
+        #  axis points later.
 
         #  Having said that, I'm going to take the cheap way out to fix the
         #  overlap case (where the candidate angle is near zero) by extending
@@ -34,7 +34,7 @@ class Poser:
         startAngle = 0
         stopAngle = 180 + (int(180 / samples) * 4)
 
-        for i in range(iterations):
+        for dummy in range(iterations):
             stepsize = int((stopAngle - startAngle) / samples)
             for angle in range(startAngle, stopAngle, stepsize):
                 self.rotate(angle)
@@ -48,8 +48,15 @@ class Poser:
             startAngle = max(0, candidate - stepsize)
             stopAngle = min(180 + (4 * stepsize), candidate + stepsize)
 
-            # So I stop getting unused variable warnings.
-            i += 0
+        frhor = self.rotate(candidate)
+
+        mid_x = int(frhor.shape[0] / 2)
+
+        leftsum = np.sum(frhor[:, :mid_x])
+        rightsum = np.sum(frhor[:, mid_x:])
+
+        if leftsum < rightsum:
+            candidate = candidate + 180 % 360
 
         # The actual angle of the fish is the inverse of the candidate,
         # because we rotated the whole array and then measured along one axis.
