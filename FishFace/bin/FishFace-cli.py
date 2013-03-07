@@ -14,33 +14,43 @@ Example Usage
 import sys
 import argparse
 import imageframe
+import poser
+import hopper
  
 def main(arguments):
  
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-i','--input-image', dest='infile', type=str,
-                        metavar="INPUT_FILENAME",
-                        help = 'If we''re not running in batch processing mode, specify the filename of the input image here.',
-                        action='store')
-    parser.add_argument('-c','--cal-image', dest='calfile', type=str,
+    parser.add_argument('-c','--cal-image', dest='calFile', type=str,
                         metavar="CAL_FILENAME",
                         help = 'If you''re doing something that requires a calibration image, specify its filename here.',
-                        action='store')
-    parser.add_argument('-o','--output-image', dest='outfile', type=str,
-                        metavar="OUTPUT_FILENAME",
-                        help = 'If you want to save the result, specify a filename here. If no file is specified, the results will be briefly displayed.',
-                        action='store')
-
-    parser.add_argument('-p','--batch-path', dest='batchpath', type=str,
+                        action='store',
+                        required=True)
+    parser.add_argument('-i','--input-path', dest='batchpath', type=str,
                         metavar="BATCH_PATH",
                         help = 'The path of the data files for batch processing with a single string format replacement field.  For example, if you had files pic0001.jpg through pic0031.jpg in the data directory, you could use "data/pic00{:02d}.jpg" or "data/pic{:04d}.jpg" for the path.',
+                        action='store',
+                        required=True)
+    parser.add_argument('-o','--output-file', dest='outfile', type=str,
+                        metavar="OUTPUT_FILENAME",
+                        help = 'To store the results in a file instead of printing them, specify a filename here.',
+                        action='store')
+    parser.add_argument('-a', dest='startNum', type=int,
+                        metavar="BATCH_START", default=1,
+                        help = 'The first number to substitute into the input path.',
+                        action='store',
+                        required=True)    
+    parser.add_argument('-b', dest='stopNum', type=int,
+                        metavar="BATCH_START", default=1,
+                        help = 'The last number to substitute into the input path.',
+                        action='store',
+                        required=True)    
+
+    parser.add_argument('--crop-input-box', dest='crop_input_box', type=str,
+                        metavar="CROP_INPUT_BOX", default=None,
+                        help = 'The area of the input image to use.  Of the form "Y_MIN x X_MIN - Y_MAX x X_MAX. Example: "0x0 - 100x200" uses only the first 200 pixels of the first 100 rows of the image.',
                         action='store')
 
-    parser.add_argument('--line-thickness', dest='thickness', type=int,
-                        metavar="THICKNESS", default=3,
-                        help = 'How thick (in pixels) should lines be drawn.',
-                        action='store')    
     parser.add_argument('--threshold-value', dest='threshold', type=int,
                         metavar="THRESHOLD", default=60,
                         help = 'During image difference processing, what should the threshold be for filtering out the parts of the image that are similar?',
@@ -49,85 +59,83 @@ def main(arguments):
                         metavar="KERNEL_RADIUS", default=1,
                         help = 'How large should our dilation/erosion kernel be when opening/closing?',
                         action='store')    
-    parser.add_argument('--annotation-color', dest='color', type=tuple,
-                        metavar="RGB_COLOR", default=(255,0,255),
-                        help = 'An RGB 3-tuple specifying the color to draw annotations.',
-                        action='store')
-    parser.add_argument('--crop-input-box', dest='crop_input_box', type=str,
-                        metavar="CROP_INPUT_BOX", default=None,
-                        help = 'The area of the input image to use.  Of the form "Y_MIN x X_MIN - Y_MAX x X_MAX. Example: "0x0 - 100x200" uses only the first 200 pixels of the first 100 rows of the image.',
-                        action='store')
+#    parser.add_argument('--line-thickness', dest='thickness', type=int,
+#                        metavar="THICKNESS", default=3,
+#                        help = 'How thick (in pixels) should lines be drawn.',
+#                        action='store')    
+#    parser.add_argument('--annotation-color', dest='color', type=tuple,
+#                        metavar="RGB_COLOR", default=(255,0,255),
+#                        help = 'An RGB 3-tuple specifying the color to draw annotations.',
+#                        action='store')
 
-    parser.add_argument('-Q','--supress-output', dest='quiet',
-                        help = 'A command to supress all output for testing purposes.',
+    parser.add_argument('-Q','--suppress-output', dest='quiet',
+                        help = 'A command to suppress all output for testing purposes.',
                         action='store_true')
 
-
-    parser.add_argument('-B','--batch-mode', dest='batch',
-                        help = 'Engage batch mode.  Use with -a, -b, and -p arguments.',
-                        action='store_true')
-    parser.add_argument('-C','--crop-to-foreground-object', dest='crop',
-                        help = 'A command that crops the image to the foreground object.',
-                        action='store_true')
-    parser.add_argument('-O','--outline-foreground-object', dest='outline',
-                        help = 'A command that outlines the foreground object.',
-                        action='store_true')
 
     args = parser.parse_args(arguments)
+
+    
+
+    preCropBox = None
+    chainProcessList = []
 
     if args.crop_input_box:
         mins,maxes = args.crop_input_box.split('-')
         mins = [int(x) for x in mins.split("x")]
         maxes = [int(x) for x in maxes.split("x")]
-        crop_box = (mins[0], mins[1], maxes[0], maxes[1])
+        preCropBox = (mins[0], mins[1], maxes[0], maxes[1])
 
-    if not args.batch:
-        if args.crop:
-            crop(args, crop_box)
-
-        if args.outline:
-            outline(args, crop_box)
-
-def crop(args, crop_box=None):
-    im_in = imageframe.Frame(args.infile)
-    im_cal = imageframe.Frame(args.calfile)
-
-    if crop_box:
-        im_in.crop(crop_box)
-        im_cal.crop(crop_box)
-
-    im_in.cropToLargestBlob(im_cal,
-                            threshold=args.threshold,
-                            kernelRadius=args.ksize,
-                            lineColor=args.color,
-                            lineThickness=args.thickness)
-
-    if not args.quiet:        
-        if args.outfile:
-            im_in.saveImageToFile(args.outfile)
-        else:
-            im_in.onScreen(1, "Isolated largest object versus provided calibration image.")        
+    if preCropBox is not None:
+        chainProcessList.append(('crop', {'box': preCropBox}))
     
-def outline(args, crop_box=None):
-    im_in = imageframe.Frame(args.infile)
-    im_cal = imageframe.Frame(args.calfile)
-
-    if crop_box:
-        im_in.crop(crop_box)
-        im_cal.crop(crop_box)
+    chainProcessList.extend([
+        ('deltaImage', {'calImageFrame': args.calFile}),
+        ('grayImage', {}),
+        ('threshold', {'threshold': 60}),
+        ('closing', {'kernelRadius': 3}),
+        ('opening', {'kernelRadius': 3}),
+        ('cropToLargestBlob', {})
+    ])
     
-    im_in.drawOutlineAroundLargestBlob(calImageFrame=im_cal,
-                                        threshold=args.threshold,
-                                        kernelRadius=args.ksize,
-                                        lineColor=args.color,
-                                        lineThickness=args.thickness)
+    HC = hopper.HopperChain(source, chainProcessList)
 
-    if not args.quiet:        
-        if args.outfile:
-            im_in.saveImageToFile(args.outfile)
+    for fr in HC:
+
+        if fr.xdim + fr.ydim < 600:
+            frgray = fr.copy()
+            frgray.applyGrayImage()
+            po = poser.Poser(frgray.array)
+
+            axisAngle = po.findLongAxis()
+
+            frhor = imageframe.Frame(po.rotate(-axisAngle))
+
+            mid_x = int(frhor.xdim / 2)
+
+            leftsum = np.sum(frhor.array[:, :mid_x])
+            rightsum = np.sum(frhor.array[:, mid_x:])
+
+            print "If this is a shape, then we're getting some data all the way from the beginning of the chain: {}".format(fr.originalFileShape)
+            print "If this is None, then we aren't getting the croppedTo data: {}".format(fr.croppedTo)
+
+            if leftsum < rightsum:
+                frhor.setImage(ndimage.interpolation.rotate(frhor.array, 180))
+                axisAngle = axisAngle + 180 % 360
+
+            path = HC.chain[0].contents[HC.chain[0].cur]
+            directory, filename = os.path.split(path)
+            outpath = os.path.join(directory, "../output", "leftface-" + filename)
+            frhor.saveImageToFile(outpath)
+
         else:
-            im_in.onScreen(2, "Outlined largest object versus provided calibration image.")        
+            print "skipped {}".format(fr.originalFileName)
+
     
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
+
+
+class FishFaceCLIError(Exception):
+    pass
