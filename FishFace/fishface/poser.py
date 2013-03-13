@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 
 import copy
-import numpy as np
-from scipy import ndimage
-
 import Tkinter as tk
-from PIL import ImageTk
-from PIL import Image
 
+try:
+    import numpy as np
+    from scipy import ndimage
+    from PIL import ImageTk
+    from PIL import Image
+except ImportError:
+    print "The poser module requires, numpy, scipy, and PIL."
+    raise
 
-### Both lines below do the same thing in the actual Python interpreter,
-### but PyDev/Eclipse wants the second one for autocomplete and code
-### analysis to work.
-# import cv
-#import cv2.cv as cv
-
-import cv2
+try:
+    import cv2
+except ImportError:
+    print "The imageframe module needs OpenCV."
+    raise
 
 
 class Poser:

@@ -1,25 +1,28 @@
 #!/usr/bin/env python
 
-import numpy as np
 import os
 import Tkinter as tk
-from PIL import ImageTk
-from PIL import Image
-# import copy
+try:
+    import numpy as np
+    from PIL import ImageTk
+    from PIL import Image
+except ImportError:
+    print "The imageframe module needs both numpy and PIL."
+    raise
 
-### Both lines below do the same thing in the actual Python interpreter,
-### but PyDev/Eclipse wants the second one for autocomplete and code
-### analysis to work.
-# import cv
-import cv2.cv as cv
-import cv2
+try:
+    import cv2.cv as cv
+    import cv2
+except ImportError:
+    print "The imageframe module needs OpenCV."
+    raise
 
 
 class Frame:
 
-###
-###  Object Initialization
-###
+# ##
+# ##  Object Initialization
+# ##
     def __init__(self, image):
         self.originalFileName = None
         self.originalFileShape = None
@@ -61,9 +64,9 @@ class Frame:
             elif len(self.shape) == 3:
                 self.channels = self.array.shape[2]
 
-###
-###  File I/O
-###
+# ##
+# ##  File I/O
+# ##
     def setImageFromFile(self, filename):
         """Get image from file and store as my array."""
         if os.path.isfile(filename):
@@ -80,9 +83,9 @@ class Frame:
         elif self.channels == 3:
             cv2.imwrite(filename, cv2.cvtColor(self.array, cv.CV_BGR2RGB))
 
-###
-###  Debug display
-###
+# ##
+# ##  Debug display
+# ##
     def onScreen(self, args=dict()):
         """I need something to display these things for debugging. This uses
         Tkinter to display in a no-frills, click-to-dismiss window."""
@@ -114,9 +117,9 @@ class Frame:
 
         root.mainloop()
 
-###
-###  Array-alterations
-###
+# ##
+# ##  Array-alterations
+# ##
     def applyNull(self, args=dict()):
         pass
 
@@ -305,9 +308,9 @@ class Frame:
         else:
             print "No contours found in this frame."
 
-###
-###  Drawing methods
-###
+# ##
+# ##  Drawing methods
+# ##
     def drawCirclesAtPoints(self, args=dict()):
         """Draws dots at each of the points in the list provided.  Various
         attributes of the points (e.g. color, radius) can be specified."""
@@ -358,13 +361,13 @@ class Frame:
 
         cv2.drawContours(image=self.array,
                          contours=args['contours'],
-                         contourIdx=-1,
+                         contourIdx= -1,
                          color=args['lineColor'],
                          thickness=args['lineThickness'])
 
-###
-###  Information and convenience methods
-###
+# ##
+# ##  Information and convenience methods
+# ##
 
     def preserveArray(self, args=None):
         self.preservedArrays.append(np.copy(self.array))
@@ -407,9 +410,9 @@ class Frame:
             raise ImageProcessError("Couldn't create a kernel with shape: {}".format(shape))
         return cv2.getStructuringElement(shp, (radius * 2 + 1, radius * 2 + 1))
 
-###
-###  Copy methods
-###
+# ##
+# ##  Copy methods
+# ##
     def shallowcopy(self):
         """Return a non-deep copy of this object."""
         return self.__copy__()

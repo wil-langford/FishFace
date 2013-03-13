@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 
+import os
+import math
+
 import hopper
 import imageframe
 import poser
-# import cv2
-import os
-import numpy as np
-import math
-# from scipy import ndimage
+
+try:
+    import numpy as np
+except ImportError:
+    print "Poseidon requires numpy."
+    raise
 
 
 class Poseidon:
