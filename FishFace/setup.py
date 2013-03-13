@@ -12,6 +12,11 @@ setup(
     description='Package to find fish in images.',
     long_description=open('README.txt').read(),
     install_requires=[
-        "opencv >= 2.3.1"
+        "opencv >= 2.3.1",
+        "numpy >= 1.6.2",
+        "argparse >=1.2.1",
+        "scipy >= 0.10.1",
+        "PIL >=1.1.7",
+        "wxPython >= 2.8.12"
         ],
 )
