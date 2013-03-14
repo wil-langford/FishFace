@@ -10,23 +10,35 @@ class HopperChain:
     it returns the next frame from the last hopper in the chain."""
 
     def __init__(self, firstHopperInput, processList):
-        self.chain = [Hopper(firstHopperInput)]
-
         if type(processList) != list:
             raise HopperChainError("I need a list of processes (and their arguments) but I got a(n) {} instead.".format(type(processList)))
         else:
-            for process in processList:
-                if len(process) != 2:
-                    raise HopperChainError("The processList must contain 2-element lists or tuples whose elements are the name of the process and its arguments.")
-                else:
-                    self.chain.append(Hopper(self.chain[-1]))
-                    self.chain[-1].setProcess(process)
+            self.generateChain(firstHopperInput, processList)
+
+    def generateChain(self, firstHopperInput, processList):
+        self.firstHopperInput = firstHopperInput
+        self.processList = processList
+
+        self.chain = [Hopper(firstHopperInput)]
+
+        for process in processList:
+            if len(process) != 2:
+                raise HopperChainError("The processList must contain 2-element lists or tuples whose elements are the name of the process and its arguments.")
+            else:
+                self.chain.append(Hopper(self.chain[-1]))
+                self.chain[-1].setProcess(process)
 
     def __iter__(self):
         return self
 
     def next(self):
         return self.chain[-1].next()
+
+
+class SourceHopperChain(HopperChain):
+    def __init__(self, firstHopperInput, processList, calImage):
+        super(HopperChain, self).__init__(firstHopperInput, processList)
+        self.calImage = calImage
 
 
 class Hopper:
@@ -75,8 +87,8 @@ class Hopper:
         self.contents = filenameList
         self.parentHopper = None
 
-    def fillWithGeneratedList(self, form, first, last, directory=None):
-        filenameList = [form.format(n) for n in range(first, last + 1)]
+    def fillWithGeneratedList(self, form, first, last, directory=None, stepsize=1):
+        filenameList = [form.format(n) for n in range(first, last + 1, stepsize)]
         self.fillFromListOfFilenames(filenameList, directory=directory)
 
     def __init__(self, origInput, directory=None):
@@ -85,15 +97,18 @@ class Hopper:
             self.fillFromListOfFilenames(origInput, directory)
 
         elif type(origInput) == tuple:
+            step = 1
             if len(origInput) == 2:
                 first = 0
                 form, last = origInput
             elif len(origInput) == 3:
                 form, first, last = origInput
+            elif len(origInput) == 4:
+                form, first, last, step = origInput
             else:
-                raise HopperError("If passing a tuple, it must be either (form, first, last) or (form, last).  I see a length {} tuple.".format(len(origInput)))
+                raise HopperError("If passing a tuple, it must be either (form, first, last), (form, last), or (form, first, last, step).  I see a length {} tuple.".format(len(origInput)))
 
-            self.fillWithGeneratedList(form, first, last, directory)
+            self.fillWithGeneratedList(form, first, last, directory, stepsize=step)
 
         elif isinstance(origInput, Hopper):
             self.parentHopper = origInput
