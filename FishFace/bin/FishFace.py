@@ -62,6 +62,16 @@ class FishFaceApp(wx.Frame):
         self.chainsPanel.bar.butCopy.Bind(wx.EVT_BUTTON, self.onCopyChain)
         self.sourcesPanel.bar.butCopy.Bind(wx.EVT_BUTTON, self.onCopySource)
 
+        src = self.sourcesPanel.treeCtrl
+        chn = self.chainsPanel.listCtrl
+
+        srcroot = src.AddRoot('Sources')
+
+        for i in range(10):
+            item = src.AppendItem(srcroot, "Source {}".format(i))
+            src.AppendItem(item, "Subitem {}".format(i))
+            chn.Append(["Chain {}".format(i)])
+
     def _splitWidget(self, parentWidget, vertical=True, minPaneSize=120, paneStyle1=wx.NORMAL, paneStyle2=wx.NORMAL, sizerAxis=wx.VERTICAL):
         splitter = wx.SplitterWindow(parentWidget, style=wx.SP_3D)
         panel1 = wx.Panel(splitter, style=paneStyle1)
@@ -136,7 +146,7 @@ class SourcesTreePanel(wx.Panel):
 
         vertSizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.treeCtrl = wx.TreeCtrl(self)
+        self.treeCtrl = wx.TreeCtrl(self, style=wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS)
         vertSizer.Add(self.treeCtrl, 1, wx.EXPAND)
 
         self.bar = ButtonBar(self, butAdd=butAdd, butRemove=butRemove, butEdit=butEdit, butCopy=butCopy, setParentButtons=setMyButtons)
