@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """The wxPython GUI for FishFace."""
+
 try:
     import wx
 except:
@@ -11,10 +12,13 @@ class FishFaceApp(wx.Frame):
     def __init__(self, parent, wxid, title):
         wx.Frame.__init__(self, parent, wxid, title, style=wx.DEFAULT_FRAME_STYLE)
         self.parent = parent
-        self.startup()
+        self.createMainWindow()
+        self.Show(True)
 
-    def startup(self):
+    def createMainWindow(self):
         """Build widgets and show window."""
+
+        self.SetSize((800, 600))
 
         self.Bind(wx.EVT_CLOSE, self.onExit)
 
@@ -37,63 +41,72 @@ class FishFaceApp(wx.Frame):
         self.SetMenuBar(mBar)
 
         # Primary splitter (left panels from right panel)
-        splitter = wx.SplitterWindow(self, style=wx.SP_3D)
-        leftPanel = wx.Panel(splitter, style=wx.SUNKEN_BORDER)
-        rightPanel = wx.Panel(splitter, style=wx.SUNKEN_BORDER)
-        splitter.SplitVertically(leftPanel, rightPanel)
-        splitter.SetMinimumPaneSize(120)
+        dummy_splitter, leftPanel, self.viewPanel = self._splitWidget(self, paneStyle2=wx.SUNKEN_BORDER, minPaneSize=250)
 
         # Left splitter (top panel from bottom panel)
-        leftSplitter = wx.SplitterWindow(leftPanel, style=wx.SP_3D)
-        self.sourcesPanel = wx.Panel(leftSplitter, style=wx.SUNKEN_BORDER)
-        self.chainsPanel = wx.Panel(leftSplitter)
-        leftSplitter.SplitHorizontally(self.sourcesPanel, self.chainsPanel)
-        leftSplitter.SetMinimumPaneSize(120)
+        leftSplitter, temp1, temp2 = self._splitWidget(leftPanel, vertical=False)
+        self.sourcesPanel = SourcesTreePanel(leftSplitter, 'tree')
+        leftSplitter.ReplaceWindow(temp1, self.sourcesPanel)
+        self.chainsPanel = ChainsListPanel(leftSplitter)
+        leftSplitter.ReplaceWindow(temp2, self.chainsPanel)
 
-        # Sizers and such
-        leftSizer = wx.BoxSizer(wx.HORIZONTAL)
-        leftSizer.Add(leftSplitter, 1, wx.EXPAND)
-        leftPanel.SetSizer(leftSizer)
+        temp1.Destroy()
+        temp2.Destroy()
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        self.chainsPanel.bar.butAdd.Bind(wx.EVT_BUTTON, self.onAddChain)
+        self.sourcesPanel.bar.butAdd.Bind(wx.EVT_BUTTON, self.onAddSource)
+        self.chainsPanel.bar.butRemove.Bind(wx.EVT_BUTTON, self.onRemoveChain)
+        self.sourcesPanel.bar.butRemove.Bind(wx.EVT_BUTTON, self.onRemoveSource)
+        self.chainsPanel.bar.butEdit.Bind(wx.EVT_BUTTON, self.onEditChain)
+        self.sourcesPanel.bar.butEdit.Bind(wx.EVT_BUTTON, self.onEditSource)
+        self.chainsPanel.bar.butCopy.Bind(wx.EVT_BUTTON, self.onCopyChain)
+        self.sourcesPanel.bar.butCopy.Bind(wx.EVT_BUTTON, self.onCopySource)
+
+    def _splitWidget(self, parentWidget, vertical=True, minPaneSize=120, paneStyle1=wx.NORMAL, paneStyle2=wx.NORMAL, sizerAxis=wx.VERTICAL):
+        splitter = wx.SplitterWindow(parentWidget, style=wx.SP_3D)
+        panel1 = wx.Panel(splitter, style=paneStyle1)
+        panel2 = wx.Panel(splitter, style=paneStyle2)
+
+        # split vertically or horizontally
+        if vertical:
+            splitfunc = splitter.SplitVertically
+        else:
+            splitfunc = splitter.SplitHorizontally
+        splitfunc(panel1, panel2)
+
+        splitter.SetMinimumPaneSize(minPaneSize)
+
+        sizer = wx.BoxSizer(sizerAxis)
         sizer.Add(splitter, 1, wx.EXPAND)
-        self.SetSizer(sizer)
+        parentWidget.SetSizer(sizer)
 
-        # Source Tree
-        self.sourcesTree = wx.TreeCtrl(self.sourcesPanel)
-        self.sourcesButtonBar = wx.Panel(self.sourcesPanel)
-        sourceSizer = wx.BoxSizer(wx.VERTICAL)
-        sourceSizer.Add(self.sourcesTree, 1, wx.EXPAND)
-        sourceSizer.Add(self.sourcesButtonBar, 0, wx.ALL)
-        self.sourcesPanel.SetSizer(sourceSizer)
+        return splitter, panel1, panel2
 
-        # Chains List
-        self.chainsList = wx.ListCtrl(self.chainsPanel)
-        self.chainsButtonBar = wx.Panel(self.chainsPanel)
-        chainsSizer = wx.BoxSizer(wx.VERTICAL)
-        chainsSizer.Add(self.chainsList, 1, wx.EXPAND)
-        chainsSizer.Add(self.chainsButtonBar, 0, wx.ALL)
-        self.chainsPanel.SetSizer(chainsSizer)
+    #########################################
 
-        # button bars' layouts
-        sourcesBBS = wx.BoxSizer(wx.HORIZONTAL)
-        sourcesBBS.Add(wx.Button(self.sourcesButtonBar, id=wx.ID_ADD, style=wx.BU_EXACTFIT))
-        sourcesBBS.Add(wx.Button(self.sourcesButtonBar, id=wx.ID_REMOVE, style=wx.BU_EXACTFIT))
-        sourcesBBS.Add(wx.Button(self.sourcesButtonBar, id=wx.ID_EDIT, style=wx.BU_EXACTFIT))
-        self.sourcesButtonBar.SetSizer(sourcesBBS)
+    def onAddChain(self, event):
+        print "Adding chain!"
 
-        chainsBBS = wx.BoxSizer(wx.HORIZONTAL)
-        chainsBBS.Add(wx.Button(self.chainsButtonBar, id=wx.ID_ADD, style=wx.BU_EXACTFIT))
-        chainsBBS.Add(wx.Button(self.chainsButtonBar, id=wx.ID_REMOVE, style=wx.BU_EXACTFIT))
-        chainsBBS.Add(wx.Button(self.chainsButtonBar, id=wx.ID_EDIT, style=wx.BU_EXACTFIT))
-        self.chainsButtonBar.SetSizer(chainsBBS)
+    def onAddSource(self, event):
+        print "Adding source!"
 
-        # Set overall window geometry and show window
-        self.SetSize((900, 600))
-        self.Show(True)
+    def onRemoveChain(self, event):
+        print "Removing chain!"
 
-        # Set initial splitter sash positions and gravities
-        splitter.SetSashPosition(int(splitter.GetSizeTuple()[0] / 4))
+    def onRemoveSource(self, event):
+        print "Removing source!"
+
+    def onEditChain(self, event):
+        print "Editing chain!"
+
+    def onEditSource(self, event):
+        print "Editing source!"
+
+    def onCopyChain(self, event):
+        print "Copying chain!"
+
+    def onCopySource(self, event):
+        print "Copying source!"
 
     def onExit(self, event):
 #        dialog = wx.MessageDialog(self, "Really close?", "Confirm Close", wx.OK | wx.CANCEL | wx.ICON_QUESTION)
@@ -115,6 +128,69 @@ class FishFaceApp(wx.Frame):
 
 #    def onSize(self, event):
 #        print event
+
+
+class SourcesTreePanel(wx.Panel):
+    def __init__(self, parentWidget, butAdd=True, butRemove=True, butEdit=True, butCopy=True, style=wx.SUNKEN_BORDER, setMyButtons=True):
+        wx.Panel.__init__(self, parentWidget, style=style)
+
+        vertSizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.treeCtrl = wx.TreeCtrl(self)
+        vertSizer.Add(self.treeCtrl, 1, wx.EXPAND)
+
+        self.bar = ButtonBar(self, butAdd=butAdd, butRemove=butRemove, butEdit=butEdit, butCopy=butCopy, setParentButtons=setMyButtons)
+        vertSizer.Add(self.bar, 0, wx.ALL)
+        self.SetSizer(vertSizer)
+
+
+class ChainsListPanel(wx.Panel):
+    def __init__(self, parentWidget, butAdd=True, butRemove=True, butEdit=True, butCopy=True, style=wx.SUNKEN_BORDER, setMyButtons=True):
+        wx.Panel.__init__(self, parentWidget, style=style)
+
+        vertSizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.listCtrl = wx.ListCtrl(self)
+        vertSizer.Add(self.listCtrl, 1, wx.EXPAND)
+
+        self.bar = ButtonBar(self, butAdd=butAdd, butRemove=butRemove, butEdit=butEdit, butCopy=butCopy, setParentButtons=setMyButtons)
+        vertSizer.Add(self.bar, 0, wx.ALL)
+        self.SetSizer(vertSizer)
+
+
+class ButtonBar(wx.Panel):
+    def __init__(self, parentWidget, butAdd=True, butRemove=True, butEdit=True, butCopy=True, setParentButtons=True):
+        wx.Panel.__init__(self, parentWidget)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        if butAdd or butRemove or butEdit or butCopy:
+            if butAdd:
+                self.butAdd = wx.Button(self, id=wx.ID_ADD, style=wx.BU_EXACTFIT)
+                sizer.Add(self.butAdd)
+                if setParentButtons:
+                    parentWidget.butAdd = self.butAdd
+            if butRemove:
+                self.butRemove = wx.Button(self, id=wx.ID_REMOVE, style=wx.BU_EXACTFIT)
+                sizer.Add(self.butRemove)
+                if setParentButtons:
+                    parentWidget.butRemove = self.butRemove
+            if butEdit:
+                self.butEdit = wx.Button(self, id=wx.ID_EDIT, style=wx.BU_EXACTFIT)
+                sizer.Add(self.butEdit)
+                if setParentButtons:
+                    parentWidget.butEdit = self.butEdit
+            if butCopy:
+                self.butCopy = wx.Button(self, id=wx.ID_COPY, style=wx.BU_EXACTFIT)
+                sizer.Add(self.butCopy)
+                if setParentButtons:
+                    parentWidget.butCopy = self.butCopy
+        else:
+            raise FishFaceAppError("ButtonBar is helpless without buttons.")
+        self.SetSizer(sizer)
+
+
+class FishFaceAppError(Exception):
+    pass
+
 
 if __name__ == '__main__':
     app = wx.App()
