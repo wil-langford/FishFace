@@ -2,11 +2,16 @@
 Fish Face
 =========
 
-Fish Face will endeavor to analyze captured images of a plecostomus in a
+Fish Face endeavors to analyze captured images of a plecostomus in a
 water flume and determine which way it is facing relative to the flow.
 
 STATUS
 ======
+v1.1 is expected by the end of June, 2013.  The access conflict that we had with
+the flume has been resolved, and development is now active again.  The planned GUI
+has been tabled for now in favor of improvements to the actual function of the
+software.
+
 v1.0 is complete according to the "rough plan" outlined below.  I'm using only
 the "longest axis" of the silhouette of the fish at the moment, but this worked
 surprisingly well.  It also is consistent with the goal of the experiment for
@@ -30,4 +35,4 @@ Things I'm considering as possible ways to accomplish that:
 ROUGH PLAN
 ==========
 Version 1.0 will be a command-line application with batch processing.
-Version 2.0 will have a GUI and better (i.e. extant) documentation.
+Version 1.1 will have an improved orientation/location determination algorithm.
