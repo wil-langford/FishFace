@@ -8,6 +8,7 @@ try:
     from PIL import Image
 except ImportError:
     print "The imageframe module needs both numpy and PIL."
+    print "In debian, install the \n  python-image-tk\n  python-imaging\n  python-numpy\npackages to meet these requirements."
     raise
 
 try:
