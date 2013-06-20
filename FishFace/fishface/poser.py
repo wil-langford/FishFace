@@ -21,7 +21,7 @@ except ImportError:
 
 class Poser:
 
-    def findLongAxis(self, samples=10, iterations=2):
+    def findLongAxis(self, samples=10, iterations=3):
 
         #  Since we're just trying to find the angle of the axis with this
         #  method, 0-180 is sufficient.  We'll decide which direction the
@@ -39,6 +39,7 @@ class Poser:
         # what iteration we're actually on
         for dummy in range(iterations):
             stepsize = int((stopAngle - startAngle) / samples)
+            stepsize = max(stepsize,1)
             # for each of the candidate angles, compute the rotated picture
             # and the horizontal sums for each line of the rotated picture
             for angle in range(startAngle, stopAngle, stepsize):
@@ -66,7 +67,7 @@ class Poser:
         frhor = self.rotate(candidate)
 
         # find the horizontal middle of the candidate-rotated image
-        mid_x = int(frhor.shape[0] / 2)
+        mid_x = int(frhor.shape[1] / 2)
 
         # find the sum of pixels on each side of that horizontal middle
         leftsum = np.sum(frhor[:, :mid_x])
@@ -76,6 +77,8 @@ class Poser:
         # right and not left.  Rotate it 180 degrees so it faces left.
         if leftsum < rightsum:
             candidate = candidate + 180 % 360
+
+        self.rotate(candidate)
 
         # The actual angle of the fish is the inverse of the candidate,
         # because we rotated the whole array and then measured along one axis.
