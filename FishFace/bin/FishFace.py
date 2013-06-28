@@ -7,6 +7,14 @@ Fish Face - for all your fish finding and orienting needs.
 Example Usage
 =============
 
+python FishFace.py 'data/calimage-00000006-1234513565.jpg' \\
+                   'data/fish_image-{}.jpg' \\
+                    51 2783
+
+Using the calibration image data/calimage-00000006-1234513565.jpg, process image
+numbers 51 through 2783 of the format data/fish_image-NNNNNNNN-TTTTTTTTTT.jpg,
+where the Ns represent the image serial number (i.e. 51 through 2783) and the Ts
+represent a machine-readable timestamp.
 
 """
 
@@ -22,30 +30,27 @@ def main(arguments):
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-c', '--cal-image', dest='calFile', type=str,
+    parser.add_argument('calFile', type=str,
                         metavar="CAL_FILENAME",
-                        help='If you''re doing something that requires a calibration image, specify its filename here.',
-                        action='store',
-                        required=True)
-    parser.add_argument('-i', '--input-path', dest='batchpath', type=str,
+                        help='Specify the calibration image here.  The calibration image is the experimental image without a fish.  The difference between this image and images containing a fish is central to the current fish-finding algorithm.',
+                        action='store')
+    parser.add_argument('batchPath', type=str,
                         metavar="BATCH_PATH",
                         help='The path of the data files for batch processing with a single string format replacement field.  For example, if you had files pic0001.jpg through pic0031.jpg in the data directory, you could use "data/pic00{:02d}.jpg" or "data/pic{:04d}.jpg" for the path.',
-                        action='store',
-                        required=True)
+                        action='store')
+    parser.add_argument('startNum', type=int,
+                        metavar="BATCH_START", default=1,
+                        help='The first image number to process.',
+                        action='store')
+    parser.add_argument('stopNum', type=int,
+                        metavar="BATCH_STOP", default=1,
+                        help='The last image number to process.',
+                        action='store')
+
     parser.add_argument('-o', '--output-file', dest='outfile', type=str,
                         metavar="OUTPUT_FILENAME",
                         help='To store the results in a file instead of printing them, specify a filename here.',
                         action='store')
-    parser.add_argument('-a', dest='startNum', type=int,
-                        metavar="BATCH_START", default=1,
-                        help='The first number to substitute into the input path.',
-                        action='store',
-                        required=True)
-    parser.add_argument('-b', dest='stopNum', type=int,
-                        metavar="BATCH_START", default=1,
-                        help='The last number to substitute into the input path.',
-                        action='store',
-                        required=True)
 
     parser.add_argument('--crop-input-box', dest='crop_input_box', type=str,
                         metavar="CROP_INPUT_BOX", default=None,
@@ -74,12 +79,12 @@ def main(arguments):
 #                        action='store')
 
     parser.add_argument('-Q', '--suppress-output', dest='quiet',
-                        help='A command to suppress all output for testing purposes.',
+                        help='Suppress all output for testing purposes.',
                         action='store_true')
 
     args = parser.parse_args(arguments)
 
-    source = (args.batchpath, args.startNum, args.stopNum)
+    source = (args.batchPath, args.startNum, args.stopNum)
 
     calFrame = imageframe.Frame(args.calFile)
 
