@@ -2,6 +2,7 @@
 
 import imageframe
 import os
+import glob
 
 
 class HopperChain:
@@ -80,18 +81,18 @@ class Hopper:
         except AttributeError:
             pass
 
-    def fillFromListOfFilenames(self, filenameList, directory=None):
-        if directory:
-            filenameList = [os.path.join(directory, filename)
-                            for filename in filenameList]
+    def fillFromListOfFilenames(self, filenameList, directory="./"):
+        filenameList = [glob.glob(os.path.join(directory, filename))
+                        for filename in filenameList]
+        filenameList = [p[0] for p in filenameList if len(p)==1]
         self.contents = filenameList
         self.parentHopper = None
 
-    def fillWithGeneratedList(self, form, first, last, directory=None, stepsize=1):
-        filenameList = [form.format(n) for n in range(first, last + 1, stepsize)]
+    def fillWithGeneratedList(self, form, first, last, directory="./", stepsize=1):
+        filenameList = [form.format("{:08d}-".format(n)+"[0-9]"*10) for n in range(first, last + 1, stepsize)]
         self.fillFromListOfFilenames(filenameList, directory=directory)
 
-    def __init__(self, origInput, directory=None):
+    def __init__(self, origInput, directory="./"):
         self.origInput = origInput
         if type(origInput) == list:
             self.fillFromListOfFilenames(origInput, directory)
