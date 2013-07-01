@@ -2,6 +2,7 @@
 
 import copy
 import Tkinter as tk
+import math
 
 try:
     import numpy as np
@@ -20,6 +21,62 @@ except ImportError:
 
 
 class Poser:
+
+    def momentLongAxis(self):
+        mu00 = self.moms['m00']
+        mu20p = self.moms['mu20'] / mu00
+        mu02p = self.moms['mu02'] / mu00
+        mu11p = self.moms['mu11'] / mu00
+        if mu11p == 0:
+            return False
+        else:
+            return math.degrees(0.5 * math.atan((2*mu11p)/(mu20p - mu02p)))
+
+    def fastFindLongAxis(self):
+
+        offset = int(self.momentLongAxis())
+
+        for candidate in range(0,360,90):
+            candidate = (candidate - offset) % 360
+
+            self.rotate(candidate)
+            self.horsum(candidate)
+
+        # find the keys for each of the horizontal sum arrays
+        ks = list(self.horsums.keys())
+
+        # find the maximum value from each horizontal sum array
+        vs = [np.amax(hs) for hs in self.horsums.values()]
+
+        # and the maximum value of all of those maximums
+        max_length = max(vs)
+
+        # and the candidate will be the angle that produces that
+        # maximum value
+        angle = ks[vs.index(max_length)]
+
+        # rotate the current imageframe to the found angle and store it in frhor
+        frhor = self.rotate(angle)
+
+        # find the horizontal middle of the candidate-rotated image
+        mid_x = int(frhor.shape[1] / 2)
+
+        # find the sum of pixels on each side of that horizontal middle
+        leftsum = np.sum(frhor[:, :mid_x])
+        rightsum = np.sum(frhor[:, mid_x:])
+
+        # if the leftsum is less than the rightsum, then the fish is facing
+        # right and not left.  Rotate it 180 degrees so it faces left.
+        if leftsum < rightsum:
+            angle = angle + 180 % 360
+
+        # let's make extra sure we have a stored rotation at the angle
+        self.rotate(angle)
+
+        # The actual angle of the fish is the inverse of the candidate,
+        # because we rotated the whole array and then measured along one axis.
+        return int((-angle) % 360)
+
 
     def findLongAxis(self, samples=10, iterations=3):
 
@@ -201,6 +258,7 @@ class Poser:
         self.setArray(array)
         self.rots = dict()
         self.horsums = dict()
+        self.moms = cv2.moments(self.array, binaryImage=True)
 
 # Definitions of custom exceptions
 
