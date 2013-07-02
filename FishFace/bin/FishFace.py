@@ -126,15 +126,15 @@ def main(arguments):
 
             if args.outfile:
                 with open(args.outfile, 'a') as f:
-                    # f.write("{}: angle {}\n".format(fr.originalFileName, angle))
-                    f.write("{}: moment angle {}\n".format(fr.originalFileName, angle2))
+                    # f.write("{}: angle {}\n".format(fr.data['originalFileName'], angle))
+                    f.write("{}: moment angle {}\n".format(fr.data['originalFileName'], angle2))
             else:
-                # print "{}: angle {}".format(fr.originalFileName, angle)
-                # print "{}: moment angle {}".format(fr.originalFileName, angle2)
-                print "{} Angle diff: {}\tAngle: {}\tAngle2: {}".format(fr.originalFileName,(angle-angle2+180)%360-180,angle,angle2)
+                # print "{}: angle {}".format(fr.data['originalFileName'], angle)
+                # print "{}: moment angle {}".format(fr.data['originalFileName'], angle2)
+                print "{} Angle diff: {}\tAngle: {}\tAngle2: {}".format(fr.data['originalFileName'], (angle-angle2+180)%360-180,angle,angle2)
 
         else:
-            print "skipped {}".format(fr.originalFileName)
+            print "skipped {}".format(fr.data['originalFileName'])
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

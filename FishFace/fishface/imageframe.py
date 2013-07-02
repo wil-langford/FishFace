@@ -2,6 +2,8 @@
 
 import os
 import Tkinter as tk
+import copy
+
 try:
     import numpy as np
     from PIL import ImageTk
@@ -25,10 +27,7 @@ class Frame:
 # ##  Object Initialization
 # ##
     def __init__(self, image):
-        self.originalFileName = None
-        self.originalFileShape = None
-        self.croppedTo = None
-        self.preservedArrays = []
+        self.data = { 'preservedArrays':[] }
 
         self.setImage(image)
 
@@ -72,8 +71,8 @@ class Frame:
         """Get image from file and store as my array."""
         if os.path.isfile(filename):
             self.array = cv2.cvtColor(cv2.imread(filename), cv.CV_RGB2BGR)
-            self.originalFileName = filename
-            self.originalFileShape = self.array.shape
+            self.data['originalFileName'] = filename
+            self.data['originalFileShape'] = self.array.shape
         else:
             raise ImageInitError("File not found (or isn't a regular file): {}".format(filename))
 
@@ -123,6 +122,13 @@ class Frame:
 # ##
     def applyNull(self, args=dict()):
         pass
+
+    def applyRevertToSource(self,saveCurrent=False):
+        if saveCurrent:
+            self.preserveArray()
+
+        if 'originalFileName' in self.data:
+            self.setImageFromFile(self.data['originalFileName'])
 
     def applyMedianFilter(self, args=dict()):
         """Apply median filtering to the array with a default kernel radius of 1."""
@@ -288,12 +294,12 @@ class Frame:
         # save the last shape and the bounding box for future reference
         self.last_shape = self.shape
 
-        if self.croppedTo:
-            sct = self.croppedTo
+        if 'croppedTo' in self.data:
+            sct = self.data['croppedTo']
             addme = (sct[0], sct[1], sct[0], sct[1])
-            self.croppedTo = [a + b for a, b in zip(box, addme)]
+            self.data['croppedTo'] = [a + b for a, b in zip(box, addme)]
         else:
-            self.croppedTo = box
+            self.data['croppedTo'] = box
 
         self.setImage(self.array[box[0]:box[2], box[1]:box[3]])
 
@@ -371,7 +377,7 @@ class Frame:
 # ##
 
     def preserveArray(self, args=None):
-        self.preservedArrays.append(np.copy(self.array))
+        self.data['preservedArrays'].append(np.copy(self.array))
 
     def findAllContours(self):
         """Returns a list of all contours in the single-channel image."""
@@ -380,10 +386,13 @@ class Frame:
             raise ImageProcessError("I can only find contours in single-channel images, but I see {} channels.".format(self.channels))
 
         # I don't care about the hierarchy; I just want the contours.
-        return cv2.findContours(self.array,
-                                mode=cv2.RETR_EXTERNAL,
-                                method=cv2.CHAIN_APPROX_SIMPLE
-                                )[0]
+
+        self.data['allContours'] =  cv2.findContours(self.array,
+                                    mode=cv2.RETR_EXTERNAL,
+                                    method=cv2.CHAIN_APPROX_SIMPLE
+                                    )[0]
+
+        return self.data['allContours']
 
     def boundingBoxFromContour(self, contour, border=1):
         """Convenience method to find the bounding box of a contour. Output is a tuple
@@ -426,9 +435,7 @@ class Frame:
         """The actual implementation of the object shallowcopy() method.  Named so that
         the copy module can find it."""
         newFrame = Frame(self.array, copyArray=False)
-        newFrame.originalFileName = self.originalFileName
-        newFrame.originalFileShape = self.originalFileShape
-        newFrame.croppedTo = self.croppedTo
+        newFrame.data = copy.copy(self.data)
         return newFrame
 
     def __deepcopy__(self, memodic=None):
@@ -436,9 +443,7 @@ class Frame:
         the copy module can find it."""
         newFrame = Frame(np.zeros(self.shape))
         newFrame.array = np.copy(self.array)
-        newFrame.originalFileName = self.originalFileName
-        newFrame.originalFileShape = self.originalFileShape
-        newFrame.croppedTo = self.croppedTo
+        newFrame.data = copy.deepcopy(self.data)
         return newFrame
 
 

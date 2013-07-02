@@ -75,7 +75,7 @@ class Hopper:
                 'skeletonize': self.frame.applySkeletonize,
                 'threshold': self.frame.applyThreshold
             }
-            # print "HOPPERDEBUG {}: {} {}".format(self.processName, self.frame.originalFileShape, self.frame.croppedTo)
+            # print "HOPPERDEBUG {}: {} {}".format(self.processName, self.frame.data['originalFileShape'], self.frame.croppedTo)
 
             processes[self.processName](self.processArgs)
         except AttributeError:

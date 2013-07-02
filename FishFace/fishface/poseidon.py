@@ -53,7 +53,7 @@ class Poseidon:
                 frleft.saveImageToFile(outpath)
 
             else:
-                print "skipped {}".format(fr.originalFileName)
+                print "skipped {}".format(fr.data['originalFileName'])
 
     def extremaAnalysis(self, array, alsoReturnMinima=False):
                 array = np.copy(array)
@@ -108,7 +108,7 @@ class Poseidon:
         HC = hopper.HopperChain(source, chainProcessList)
 
         for fr in HC:
-            print "original filename: {}".format(fr.originalFileName)
+            print "original filename: {}".format(fr.data['originalFileName'])
             path = HC.chain[0].contents[HC.chain[0].cur]
             directory, filename = os.path.split(path)
             outpath = os.path.join(directory, "../output", "blob-" + filename)
