@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+The imageframe module provides the imageframe.Frame object (and some supporting objects).
+"""
 
 import os
 import Tkinter as tk
@@ -22,6 +25,18 @@ except ImportError:
 
 
 class Frame:
+    """
+The Frame object is the workhorse of the imageprocessing done by FishFace.
+It has two main attributes:
+    Frame.array - a numpy array that contains the current image data
+    Frame.data - a dictionary that stores metadata about the current image
+        Some notable dictionary elements:
+        * originalFileName - the filename of the source image
+        * originalFileShape - the resolution and number of channels of the source image
+        * croppedTo - if we have cropped the image, this is the box that we cropped to
+        * shape - current shape of the image (includes number of channels)
+        * spatialshape - current shape of the image (just the 2D shape, not the number of channels)
+"""
 
 # ##
 # ##  Object Initialization
@@ -36,7 +51,7 @@ class Frame:
         dtype uint8, just copy it.  If it's a string, try to load from that
         filename."""
 
-        # Depending on file type, use various initializers
+        # Depending on file type, use various initializers:
 
         # It's already a numpy array. Store or copy it.
         if(type(image) == np.ndarray):
@@ -52,17 +67,17 @@ class Frame:
         else:
             raise ImageInitError("setImage requires a numpy array or filename string, but I see a {}".format(type(image)))
 
-        self.shape = self.array.shape
+        self.data['shape'] = self.array.shape
 
-        if len(self.shape) > 1:
-            self.spatialshape = tuple(self.shape[:2])
-            self.ydim = self.spatialshape[0]
-            self.xdim = self.spatialshape[1]
+        if len(self.data['shape']) > 1:
+            self.data['spatialshape'] = tuple(self.data['shape'][:2])
+            self.ydim = self.data['spatialshape'][0]
+            self.xdim = self.data['spatialshape'][1]
 
-            if len(self.shape) == 2:
-                self.channels = 1
-            elif len(self.shape) == 3:
-                self.channels = self.array.shape[2]
+            if len(self.data['shape']) == 2:
+                self.data['channels'] = 1
+            elif len(self.data['shape']) == 3:
+                self.data['channels'] = self.array.shape[2]
 
 # ##
 # ##  File I/O
@@ -78,9 +93,9 @@ class Frame:
 
     def saveImageToFile(self, filename):
         """Save the image to a file."""
-        if self.channels == 1:
+        if self.data['channels'] == 1:
             cv2.imwrite(filename, self.array)
-        elif self.channels == 3:
+        elif self.data['channels'] == 3:
             cv2.imwrite(filename, cv2.cvtColor(self.array, cv.CV_BGR2RGB))
 
 # ##
@@ -177,9 +192,9 @@ class Frame:
         #     raise ImageProcessError("The calibration image I received is not a Frame object.")
 
         if 'gray' in args:
-            if self.channels != 2:
+            if self.data['channels'] != 2:
                 self.applyGrayImage()
-            if calFrame.channels != 2:
+            if calFrame.data['channels'] != 2:
                 calFrame = calFrame.copy()
                 calFrame.applyGrayImage()
 
@@ -189,7 +204,7 @@ class Frame:
 
     def applyGrayImage(self, args=dict()):
         """Convert to grayscale."""
-        if self.channels == 3:
+        if self.data['channels'] == 3:
             self.setImage(cv2.cvtColor(src=self.array, code=cv.CV_RGB2GRAY))
 
     def applyDilate(self, args=dict()):
@@ -256,8 +271,8 @@ class Frame:
     def applySkeletonize(self, args=dict()):
         """Finds the morphological skeleton."""
 
-        if self.channels > 1:
-            raise ImageProcessError("I can only find the morphological skeleton of single-channel images, but I see {} channels.".format(self.channels))
+        if self.data['channels'] > 1:
+            raise ImageProcessError("I can only find the morphological skeleton of single-channel images, but I see {} channels.".format(self.data['channels']))
 
         if 'skelKernelRadius' not in args:
             args['skelKernelRadius'] = 1
@@ -292,7 +307,7 @@ class Frame:
         box = args['box']
 
         # save the last shape and the bounding box for future reference
-        self.last_shape = self.shape
+        self.data['last_shape'] = self.data['shape']
 
         if 'croppedTo' in self.data:
             sct = self.data['croppedTo']
@@ -342,7 +357,7 @@ class Frame:
 
         args['points'] = np.roll(args['points'], 1, axis=2)
 
-        if self.channels == 1:
+        if self.data['channels'] == 1:
             args['lineColor'] = int(sum(args['lineColor']) / 3)
 
         for point in args['points']:
@@ -382,8 +397,8 @@ class Frame:
     def findAllContours(self):
         """Returns a list of all contours in the single-channel image."""
 
-        if self.channels > 1:
-            raise ImageProcessError("I can only find contours in single-channel images, but I see {} channels.".format(self.channels))
+        if self.data['channels'] > 1:
+            raise ImageProcessError("I can only find contours in single-channel images, but I see {} channels.".format(self.data['channels']))
 
         # I don't care about the hierarchy; I just want the contours.
 
@@ -441,7 +456,7 @@ class Frame:
     def __deepcopy__(self, memodic=None):
         """The actual implementation of the object copy() method.  Named so that
         the copy module can find it."""
-        newFrame = Frame(np.zeros(self.shape))
+        newFrame = Frame(np.zeros(self.data['shape']))
         newFrame.array = np.copy(self.array)
         newFrame.data = copy.deepcopy(self.data)
         return newFrame

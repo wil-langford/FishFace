@@ -2,19 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="74424c92-0fef-4161-8ba9-8f913e8cf33e" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FishFace/bin/FishFace.py" afterPath="$PROJECT_DIR$/FishFace/bin/FishFace.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FishFace/fishface/hopper.py" afterPath="$PROJECT_DIR$/FishFace/fishface/hopper.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FishFace/fishface/imageframe.py" afterPath="$PROJECT_DIR$/FishFace/fishface/imageframe.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FishFace/fishface/poseidon.py" afterPath="$PROJECT_DIR$/FishFace/fishface/poseidon.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="FishFace.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372796727774" ignored="false" />
+    <file path="/Dummy.txt" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372797119186" ignored="false" />
     <file path="/FishFace.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372795309174" ignored="false" />
     <file path="/hopper.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372462525403" ignored="false" />
     <file path="/poser.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372709616012" ignored="false" />
-    <file path="/imageframe.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372797093328" ignored="false" />
+    <file path="/imageframe.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372798197846" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,29 +35,9 @@
       <file leaf-file-name="imageframe.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/FishFace/fishface/imageframe.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="379" column="34" selection-start="12468" selection-end="12483" vertical-scroll-proportion="0.3326613">
+            <state line="27" column="4" selection-start="606" selection-end="606" vertical-scroll-proportion="0.11673152">
               <folding>
-                <element signature="e#23#32#0" expanded="true" />
-                <element signature="e#3536#3540#0" expanded="false" />
-                <element signature="e#3603#3761#0" expanded="false" />
-                <element signature="e#3817#4053#0" expanded="false" />
-                <element signature="e#4102#4625#0" expanded="false" />
-                <element signature="e#4678#5146#0" expanded="false" />
-                <element signature="e#5200#5966#0" expanded="false" />
-                <element signature="e#6019#6154#0" expanded="false" />
-                <element signature="e#6204#6625#0" expanded="false" />
-                <element signature="e#6674#7092#0" expanded="false" />
-                <element signature="e#7143#7668#0" expanded="false" />
-                <element signature="e#7719#8264#0" expanded="false" />
-                <element signature="e#8319#9254#0" expanded="false" />
-                <element signature="e#9302#9930#0" expanded="false" />
-                <element signature="e#9991#10442#0" expanded="false" />
-                <element signature="e#10499#11552#0" expanded="false" />
-                <element signature="e#11603#12354#0" expanded="false" />
-                <element signature="e#13198#13698#0" expanded="false" />
-                <element signature="e#13756#14257#0" expanded="false" />
-                <element signature="e#14323#14398#0" expanded="false" />
-                <element signature="e#14428#14503#0" expanded="false" />
+                <element signature="e#121#130#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -85,9 +63,9 @@
       <list>
         <option value="$PROJECT_DIR$/FishFace/fishface/poseidon.py" />
         <option value="$PROJECT_DIR$/FishFace/README.txt" />
-        <option value="$PROJECT_DIR$/FishFace/fishface/hopper.py" />
         <option value="$PROJECT_DIR$/FishFace/fishface/poser.py" />
         <option value="$PROJECT_DIR$/FishFace/bin/FishFace.py" />
+        <option value="$PROJECT_DIR$/FishFace/fishface/hopper.py" />
         <option value="$PROJECT_DIR$/FishFace/fishface/imageframe.py" />
       </list>
     </option>
@@ -306,7 +284,11 @@
       <created>1372717414188</created>
       <updated>1372717414188</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Refactored with new dictionary: imageframe.data.">
+      <created>1372797123425</created>
+      <updated>1372797123425</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -334,8 +316,8 @@
     <editor active="false" />
     <layout>
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32894737" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24958678" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -436,7 +418,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
           <folding>
-            <element signature="e#23#40#0" expanded="true" />
+            <element signature="e#25#42#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -461,15 +443,6 @@
         <state line="62" column="30" selection-start="2009" selection-end="2009" vertical-scroll-proportion="1.1112485" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/FishFace/fishface/hopper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="70" column="23" selection-start="2609" selection-end="2609" vertical-scroll-proportion="0.10050251">
-          <folding>
-            <element signature="e#23#40#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/fishface/poser.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="44" column="0" selection-start="955" selection-end="955" vertical-scroll-proportion="0.43609023">
@@ -491,31 +464,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/FishFace/fishface/hopper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1" column="0" selection-start="0" selection-end="5470" vertical-scroll-proportion="0.01884422">
+          <folding>
+            <element signature="e#25#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/fishface/imageframe.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="379" column="34" selection-start="12468" selection-end="12483" vertical-scroll-proportion="0.3326613">
+        <state line="27" column="4" selection-start="606" selection-end="606" vertical-scroll-proportion="0.11673152">
           <folding>
-            <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#3536#3540#0" expanded="false" />
-            <element signature="e#3603#3761#0" expanded="false" />
-            <element signature="e#3817#4053#0" expanded="false" />
-            <element signature="e#4102#4625#0" expanded="false" />
-            <element signature="e#4678#5146#0" expanded="false" />
-            <element signature="e#5200#5966#0" expanded="false" />
-            <element signature="e#6019#6154#0" expanded="false" />
-            <element signature="e#6204#6625#0" expanded="false" />
-            <element signature="e#6674#7092#0" expanded="false" />
-            <element signature="e#7143#7668#0" expanded="false" />
-            <element signature="e#7719#8264#0" expanded="false" />
-            <element signature="e#8319#9254#0" expanded="false" />
-            <element signature="e#9302#9930#0" expanded="false" />
-            <element signature="e#9991#10442#0" expanded="false" />
-            <element signature="e#10499#11552#0" expanded="false" />
-            <element signature="e#11603#12354#0" expanded="false" />
-            <element signature="e#13198#13698#0" expanded="false" />
-            <element signature="e#13756#14257#0" expanded="false" />
-            <element signature="e#14323#14398#0" expanded="false" />
-            <element signature="e#14428#14503#0" expanded="false" />
+            <element signature="e#121#130#0" expanded="true" />
           </folding>
         </state>
       </provider>
