@@ -75,7 +75,11 @@ class Hopper:
                 'opening': self.frame.applyOpening,
                 'preserveArray': self.frame.preserveArray,
                 'skeletonize': self.frame.applySkeletonize,
-                'threshold': self.frame.applyThreshold
+                'threshold': self.frame.applyThreshold,
+                'revertToSource': self.frame.applyRevertToSource,
+                'drawCirclesAtPoints': self.frame.drawCirclesAtPoints,
+                'findCentroid': self.frame.findCentroid,
+                'drawContours': self.frame.drawContours
             }
             # print "HOPPERDEBUG {}: {} {}".format(self.processName, self.frame.data['originalFileShape'], self.frame.croppedTo)
 

@@ -6,6 +6,7 @@ The imageframe module provides the imageframe.Frame object (and some supporting 
 import os
 import Tkinter as tk
 import copy
+import math
 
 try:
     import numpy as np
@@ -26,7 +27,7 @@ except ImportError:
 
 class Frame:
     """
-The Frame object is the workhorse of the imageprocessing done by FishFace.
+The Frame object is the workhorse of the image processing done by FishFace.
 It has two main attributes:
     Frame.array - a numpy array that contains the current image data
     Frame.data - a dictionary that stores metadata about the current image
@@ -88,6 +89,10 @@ It has two main attributes:
             self.array = cv2.cvtColor(cv2.imread(filename), cv.CV_RGB2BGR)
             self.data['originalFileName'] = filename
             self.data['originalFileShape'] = self.array.shape
+            if len(self.array.shape) == 2:
+                self.data['channels'] = 1
+            else:
+                self.data['channels'] = self.array.shape[-1]
         else:
             raise ImageInitError("File not found (or isn't a regular file): {}".format(filename))
 
@@ -138,9 +143,10 @@ It has two main attributes:
     def applyNull(self, args=dict()):
         pass
 
-    def applyRevertToSource(self,saveCurrent=False):
-        if saveCurrent:
-            self.preserveArray()
+    def applyRevertToSource(self,args=dict()):
+        if 'saveCurrent' in args:
+            if args['saveCurrent']:
+                self.preserveArray()
 
         if 'originalFileName' in self.data:
             self.setImageFromFile(self.data['originalFileName'])
@@ -216,10 +222,10 @@ It has two main attributes:
         if 'kernel' not in args:
             raise ImageProcessError("I need a kernel with which to dilate.")
 
-        if 'iter' not in args:
-            args['iter'] = 1
+        if 'iterations' not in args:
+            args['iterations'] = 1
 
-        cv2.dilate(src=self.array, kernel=args['kernel'], dst=self.array, iterations=args['iter'])
+        cv2.dilate(src=self.array, kernel=args['kernel'], dst=self.array, iterations=args['iterations'])
 
     def applyErode(self, args=dict()):
         """Morphological erosion with provided kernel."""
@@ -229,10 +235,10 @@ It has two main attributes:
         if 'kernel' not in args:
             raise ImageProcessError("I need a kernel with which to dilate.")
 
-        if 'iter' not in args:
-            args['iter'] = 1
+        if 'iterations' not in args:
+            args['iterations'] = 1
 
-        cv2.erode(src=self.array, kernel=args['kernel'], dst=self.array, iterations=args['iter'])
+        cv2.erode(src=self.array, kernel=args['kernel'], dst=self.array, iterations=args['iterations'])
 
     def applyOpening(self, args=dict()):
         """Morphological opening with generated kernel.  It's essentially an erosion
@@ -263,10 +269,10 @@ It has two main attributes:
         if 'iterations' not in args:
             args['iterations'] = 1
 
-        kern = self.kernel(radius=args['kernelRadius'], shape=args['kernelShape'])
+        args['kernel'] = self.kernel(radius=args['kernelRadius'], shape=args['kernelShape'])
 
-        self.dilate(kern, args['iterations'])
-        self.erode(kern, args['iterations'])
+        self.applyDilate(args)
+        self.applyErode(args)
 
     def applySkeletonize(self, args=dict()):
         """Finds the morphological skeleton."""
@@ -316,6 +322,12 @@ It has two main attributes:
         else:
             self.data['croppedTo'] = box
 
+        if 'centroid' in self.data:
+            sct = self.data['croppedTo']
+            addme = (sct[0],sct[1])
+            self.data['centroid'] = (self.data['centroid'][0] + addme[0],
+                                     self.data['centroid'][1] + addme[1])
+
         self.setImage(self.array[box[0]:box[2], box[1]:box[3]])
 
     def applyCropToLargestBlob(self, args=dict()):
@@ -327,6 +339,8 @@ It has two main attributes:
 
             boundingBox = self.boundingBoxFromContour(max_contour)
             self.applyCrop({'box': boundingBox})
+
+            self.data['moments'] = cv2.moments(self.array)
         else:
             print "No contours found in this frame."
 
@@ -355,7 +369,8 @@ It has two main attributes:
         if args['filledIn']:
             args['lineThickness'] = -abs(args['lineThickness'])
 
-        args['points'] = np.roll(args['points'], 1, axis=2)
+        if len(args['points'].shape)>2:
+            args['points'] = np.roll(args['points'], 1, axis=2)
 
         if self.data['channels'] == 1:
             args['lineColor'] = int(sum(args['lineColor']) / 3)
@@ -363,6 +378,7 @@ It has two main attributes:
         for point in args['points']:
             cv2.circle(img=self.array,
                        center=tuple(point),
+                       thickness=args['lineThickness'],
                        radius=args['circleRadius'],
                        color=args['lineColor'])
 
@@ -386,6 +402,44 @@ It has two main attributes:
                          contourIdx= -1,
                          color=args['lineColor'],
                          thickness=args['lineThickness'])
+
+    def drawOrientation(self,args=dict()):
+        if 'centerPoint' not in args:
+            raise ImageProcessError("I need to know the point to draw from.")
+
+        if 'angle' not in args:
+            raise ImageProcessError("I need to know what angle to draw.")
+
+        if 'length' not in args:
+            args['length']=75
+
+        if 'lineColor' not in args:
+            args['lineColor'] = (255, 0, 255)
+
+        if 'lineThickness' not in args:
+            args['lineThickness'] = 2
+
+        if 'circleRadius' not in args:
+            args['circleRadius'] = 4
+
+        angle = math.radians((args['angle'] - 90) % 360)
+
+        cp = args['centerPoint']
+        ncp = (int(cp[0] + args['length']*math.sin(angle)),
+                          int(cp[1] + args['length']*math.cos(angle)))
+
+        pts = [np.array([[cp],[ncp]],dtype=np.int32)]
+
+        self.drawContours({'contours':pts,
+                           'lineColor':args['lineColor'],
+                           'lineThickness':args['lineThickness'],
+                           'filledIn':False
+                          })
+        self.drawCirclesAtPoints({'points':np.array([cp]),
+                                  'circleRadius':args['circleRadius'],
+                                  'lineColor':args['lineColor'],
+                                  'lineThickness':args['lineThickness']
+                                  })
 
 # ##
 # ##  Information and convenience methods
@@ -434,6 +488,25 @@ It has two main attributes:
         else:
             raise ImageProcessError("Couldn't create a kernel with shape: {}".format(shape))
         return cv2.getStructuringElement(shp, (radius * 2 + 1, radius * 2 + 1))
+
+    def findCentroid(self, args=dict()):
+        if 'moments' not in self.data:
+            raise ImageProcessError("You must applyCropToLargestBlob before computing the centroid.")
+
+        m00 = self.data['moments']['m00']
+        m10 = self.data['moments']['m10']
+        m01 = self.data['moments']['m01']
+
+        x = int(m10/m00)
+        y = int(m01/m00)
+
+        self.data['centroid'] = (x,y)
+        if 'croppedTo' in self.data:
+            sct = self.data['croppedTo']
+            addme = (sct[1],sct[0])
+            self.data['absoluteCentroid'] = (x+addme[0], y+addme[1])
+
+        return self.data['centroid']
 
 # ##
 # ##  Copy methods
