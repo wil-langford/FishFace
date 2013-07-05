@@ -39,6 +39,22 @@ def main(arguments):
                         help='The last number to substitute into the input path.',
                         action='store',
                         required=False)
+    parser.add_argument('-d', dest='delay', type=int,
+                        metavar="DELAY", default=1,
+                        help='The number of seconds between image captures.  Must be a positive integer.',
+                        action='store',
+                        required=False)
+    # parser.add_argument('-G', dest='autoGain', type=bool,
+    #                     metavar="ENABLE_AUTOGAIN", default=True,
+    #                     help='Should we determine a reasonable gain setting automatically when the program starts.',
+    #                     action='store',
+    #                     required=False)
+    parser.add_argument('-g', dest='gain', type=int,
+                        metavar="GAIN", default=0,
+                        help='Hardware gain setting in the 0-100 range.',
+                        action='store',
+                        required=False)
+
 
     args = parser.parse_args(arguments)
 
@@ -56,6 +72,12 @@ def main(arguments):
     if args.stopNum < args.startNum:
         raise FishFaceCaptureError("stopNum must be greater than or equal to startNum.")
 
+    if args.gain < 0 or args.gain > 100:
+        raise FishFaceCaptureError("Gain must be between 0 and 100 (inclusive.)")
+
+    cam.SetHardwareGain(args.gain,0,0,0)
+
+
     i = int(args.startNum)
 
     ar = cam.GrabImage()
@@ -66,9 +88,10 @@ def main(arguments):
         fr.setImage(ar)
         stamp = "{:08d}-{:010d}".format(i,int(time.time()))
         filename = args.outpath.format(stamp)
+        print "Grabbed frame number {}. Storing in file: {}".format(i, filename)
         fr.saveImageToFile(filename)
         i += 1
-        time.sleep(1)
+        time.sleep(args.delay)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
