@@ -12,7 +12,7 @@ camera interface provided by Linux.  (V4L?  Something else?  We'll see.)
 try:
     import ueye
 except ImportError:
-    print "The capture module needs pyueye."
+    print "Couldn't find the pyueye library.  Is it installed?"
     raise
 
 try:
