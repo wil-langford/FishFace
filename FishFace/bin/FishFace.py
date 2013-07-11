@@ -18,13 +18,21 @@ represent a machine-readable timestamp.
 
 """
 
-# import os
+# system libraries
+import os
 import sys
 import argparse
-import poser
-import hopper
-import imageframe
 
+# add library directory to path
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]), "fishface"))
+
+try:
+    import poser
+    import hopper
+    import imageframe
+except ImportError:
+    print "Couldn't find FishFace libraries (poser.py, hopper.py, etc.)"
+    raise
 
 def main(arguments):
 

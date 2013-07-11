@@ -10,13 +10,26 @@ Example Usage
 
 """
 
-# import os
+import os
 import sys
 import argparse
-import ueye
-import imageframe
 import time
-import matplotlib.pyplot as plt
+
+try:
+    import ueye
+except ImportError:
+    print "Couldn't find the pyueye library.  Is it installed?"
+    raise
+
+# add library directory to path
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]), "fishface"))
+
+try:
+    import imageframe
+    import capture
+except ImportError:
+    print "Couldn't find FishFace libraries (poser.py, hopper.py, etc.)"
+    raise
 
 class FishFaceCaptureError(Exception):
     pass
