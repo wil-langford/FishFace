@@ -4,19 +4,22 @@
     <bookmark url="file://$PROJECT_DIR$/FishFace/bin/sil-filter.py" line="113" mnemonic="3" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="74424c92-0fef-4161-8ba9-8f913e8cf33e" name="Default" comment="Finished imageframe.data refactoring.  I think.">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FishFace/fishface/hopper.py" afterPath="$PROJECT_DIR$/FishFace/fishface/hopper.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FishFace/fishface/imageframe.py" afterPath="$PROJECT_DIR$/FishFace/fishface/imageframe.py" />
+    <list default="true" id="74424c92-0fef-4161-8ba9-8f913e8cf33e" name="Default" comment="Consistent import structure for pyueye in script and module.">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="FishFace.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372884011629" ignored="false" />
-    <file path="/FishFace.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372795309174" ignored="false" />
+    <file path="/Dummy.txt" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373589175376" ignored="false" />
+    <file path="/FishFace.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373571387871" ignored="false" />
     <file path="/hopper.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372802207466" ignored="false" />
     <file path="/poser.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372709616012" ignored="false" />
-    <file path="/imageframe.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372808054505" ignored="false" />
+    <file path="/imageframe.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373575712526" ignored="false" />
     <file path="/sil-filter.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372876610668" ignored="false" />
+    <file path="/FishFaceCapture.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373571608957" ignored="false" />
+    <file path="/capture.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373571491744" ignored="false" />
+    <file path="/marker-detection.txt" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373490364872" ignored="false" />
+    <file path="/marker.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373587982552" ignored="false" />
+    <file path="/Python Console" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373578733334" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,34 +33,21 @@
   <component name="DaemonCodeAnalyzer">
     <disable_hints />
   </component>
+  <component name="DatabaseView">
+    <flatten value="false" />
+    <groupTables value="false" />
+    <sortChildren value="false" />
+  </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FavoritesManager">
     <favorites_list name="FishFace" />
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="hopper.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/FishFace/fishface/hopper.py">
+      <file leaf-file-name="capture.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/FishFace/fishface/capture.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="97" column="60" selection-start="3883" selection-end="3883" vertical-scroll-proportion="1.2108433">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="poser.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/FishFace/fishface/poser.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="44" column="0" selection-start="955" selection-end="955" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="imageframe.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/FishFace/fishface/imageframe.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="495" column="38" selection-start="17520" selection-end="17520" vertical-scroll-proportion="0.0">
+            <state line="14" column="28" selection-start="442" selection-end="442" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -66,7 +56,74 @@
       <file leaf-file-name="sil-filter.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/FishFace/bin/sil-filter.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="114" column="0" selection-start="5399" selection-end="5399" vertical-scroll-proportion="0.0">
+            <state line="113" column="0" selection-start="5313" selection-end="5313" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="imageframe.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/FishFace/fishface/imageframe.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="184" column="0" selection-start="6163" selection-end="6163" vertical-scroll-proportion="-12.48">
+              <folding>
+                <element signature="e#121#130#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FishFaceCapture.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/FishFace/bin/FishFaceCapture.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="28" column="18" selection-start="426" selection-end="426" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FishFace.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/FishFace/bin/FishFace.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="120" column="51" selection-start="5573" selection-end="5622" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="e#561#570#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="hopper.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/FishFace/fishface/hopper.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="96" column="8" selection-start="3747" selection-end="3747" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="marker-detection.txt" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/FishFace/marker-detection/marker-detection.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="2" column="17" selection-start="165" selection-end="165" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="marker.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/FishFace/marker-detection/marker.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="95" column="0" selection-start="3178" selection-end="3178" vertical-scroll-proportion="0.70696723">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="poser.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/FishFace/fishface/poser.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="145" column="13" selection-start="5243" selection-end="5243" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -93,16 +150,19 @@
         <option value="$PROJECT_DIR$/FishFace/fishface/poseidon.py" />
         <option value="$PROJECT_DIR$/FishFace/README.txt" />
         <option value="$PROJECT_DIR$/FishFace/fishface/poser.py" />
-        <option value="$PROJECT_DIR$/FishFace/bin/FishFace.py" />
         <option value="$PROJECT_DIR$/FishFace/fishface/hopper.py" />
-        <option value="$PROJECT_DIR$/FishFace/fishface/imageframe.py" />
         <option value="$PROJECT_DIR$/FishFace/bin/sil-filter.py" />
+        <option value="$PROJECT_DIR$/FishFace/marker-detection/marker-detection.txt" />
+        <option value="$PROJECT_DIR$/FishFace/bin/FishFace.py" />
+        <option value="$PROJECT_DIR$/FishFace/fishface/capture.py" />
+        <option value="$PROJECT_DIR$/FishFace/bin/FishFaceCapture.py" />
+        <option value="$PROJECT_DIR$/FishFace/fishface/imageframe.py" />
+        <option value="$PROJECT_DIR$/FishFace/marker-detection/marker.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="10" />
-    <option name="y" value="6" />
+    <option name="y" value="37" />
     <option name="width" value="1260" />
     <option name="height" value="947" />
   </component>
@@ -168,6 +228,24 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="marker-detection" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="FishFace" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="FishFace" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="FishFace" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="fishface" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -200,8 +278,8 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="options.lastSelected" value="editor" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/FishFace/bin/sample-data" />
-    <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="options.searchVisible" value="true" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -322,7 +400,39 @@
       <created>1372798387555</created>
       <updated>1372798387555</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Bug fixes, centroid computation, and drawing method.">
+      <created>1372884125804</created>
+      <updated>1372884125804</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Added delay and gain controls to capture script.">
+      <created>1373066928197</created>
+      <updated>1373066928197</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Fiddling with marker generation/detection.">
+      <created>1373501354984</created>
+      <updated>1373501354984</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Started work on generalizing the capture routines.">
+      <created>1373501389886</created>
+      <updated>1373501389886</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Cleaned up imports and (finally!) removed the need for PYTHONPATH.">
+      <created>1373571658267</created>
+      <updated>1373571658267</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Consistent import structure for pyueye in script and module.">
+      <created>1373571712062</created>
+      <updated>1373571712063</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Camelcased spatialShape and deleted a defunct comment.">
+      <created>1373589152172</created>
+      <updated>1373589152172</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Made some progress with the marker recognition.">
+      <created>1373589176756</created>
+      <updated>1373589176756</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -346,24 +456,24 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="10" y="6" width="1260" height="947" extended-state="0" />
+    <frame x="0" y="37" width="1260" height="947" extended-state="0" />
     <editor active="false" />
     <layout>
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32833958" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32833958" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3279099" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32975206" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24958678" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.27190083" sideWeight="0.6716604" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28677687" sideWeight="0.6720901" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32916147" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33014354" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24958678" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -411,7 +521,7 @@
     <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finished imageframe.data refactoring.  I think." />
+    <option name="LAST_COMMIT_MESSAGE" value="Made some progress with the marker recognition." />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -430,32 +540,19 @@
     <MESSAGE value="Tried an algorithm using image moments to find the long axis.  Wasn't impressed." />
     <MESSAGE value="Refactored with new dictionary: imageframe.data." />
     <MESSAGE value="Finished imageframe.data refactoring.  I think." />
+    <MESSAGE value="Bug fixes, centroid computation, and drawing method." />
+    <MESSAGE value="Added delay and gain controls to capture script." />
+    <MESSAGE value="Fiddling with marker generation/detection." />
+    <MESSAGE value="Started work on generalizing the capture routines." />
+    <MESSAGE value="Cleaned up imports and (finally!) removed the need for PYTHONPATH." />
+    <MESSAGE value="Consistent import structure for pyueye in script and module." />
+    <MESSAGE value="Camelcased spatialShape and deleted a defunct comment." />
+    <MESSAGE value="Made some progress with the marker recognition." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/FishFace/fishface/poser.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="44" column="0" selection-start="955" selection-end="955" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/FishFace/fishface/imageframe.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/FishFace/bin/sil-filter.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="114" column="0" selection-start="5399" selection-end="5399" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/bin/FishFace.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
@@ -468,9 +565,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/fishface/hopper.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/fishface/poser.py">
@@ -493,40 +588,69 @@
         <state line="62" column="30" selection-start="2009" selection-end="2009" vertical-scroll-proportion="1.1112485" />
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/FishFace/bin/sil-filter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="113" column="0" selection-start="5313" selection-end="5313" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FishFace/fishface/capture.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="28" selection-start="442" selection-end="442" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/bin/FishFaceCapture.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="51" column="21" selection-start="1810" selection-end="1810" vertical-scroll-proportion="0.4548872" />
+        <state line="28" column="18" selection-start="426" selection-end="426" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/bin/FishFace.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="142" column="34" selection-start="6467" selection-end="6467" vertical-scroll-proportion="3.8790786" />
+        <state line="120" column="51" selection-start="5573" selection-end="5622" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#561#570#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FishFace/fishface/hopper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="96" column="8" selection-start="3747" selection-end="3747" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/fishface/poser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="44" column="0" selection-start="955" selection-end="955" vertical-scroll-proportion="0.0">
+        <state line="145" column="13" selection-start="5243" selection-end="5243" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FishFace/marker-detection/marker-detection.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2" column="17" selection-start="165" selection-end="165" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/fishface/imageframe.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="495" column="38" selection-start="17520" selection-end="17520" vertical-scroll-proportion="0.0">
-          <folding />
+        <state line="184" column="0" selection-start="6163" selection-end="6163" vertical-scroll-proportion="-12.48">
+          <folding>
+            <element signature="e#121#130#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/FishFace/bin/sil-filter.py">
+    <entry file="file://$PROJECT_DIR$/FishFace/marker-detection/marker.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="114" column="0" selection-start="5399" selection-end="5399" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/FishFace/fishface/hopper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="97" column="60" selection-start="3883" selection-end="3883" vertical-scroll-proportion="1.2108433">
+        <state line="95" column="0" selection-start="3178" selection-end="3178" vertical-scroll-proportion="0.70696723">
           <folding />
         </state>
       </provider>
