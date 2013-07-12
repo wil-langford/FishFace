@@ -36,7 +36,7 @@ It has two main attributes:
         * originalFileShape - the resolution and number of channels of the source image
         * croppedTo - if we have cropped the image, this is the box that we cropped to
         * shape - current shape of the image (includes number of channels)
-        * spatialshape - current shape of the image (just the 2D shape, not the number of channels)
+        * spatialShape - current shape of the image (just the 2D shape, not the number of channels)
 """
 
 # ##
@@ -71,9 +71,9 @@ It has two main attributes:
         self.data['shape'] = self.array.shape
 
         if len(self.data['shape']) > 1:
-            self.data['spatialshape'] = tuple(self.data['shape'][:2])
-            self.ydim = self.data['spatialshape'][0]
-            self.xdim = self.data['spatialshape'][1]
+            self.data['spatialShape'] = tuple(self.data['shape'][:2])
+            self.ydim = self.data['spatialShape'][0]
+            self.xdim = self.data['spatialShape'][1]
 
             if len(self.data['shape']) == 2:
                 self.data['channels'] = 1
@@ -177,8 +177,6 @@ It has two main attributes:
         if 'threshold' not in args:
             raise ImageProcessError("I need a threshold to apply.")
 
-        # The [1] at the end is because we don't care what the retval is,
-        # we just want the image back.
         cv2.threshold(src=self.array,
                       thresh=args['threshold'],
                       maxval=255,
