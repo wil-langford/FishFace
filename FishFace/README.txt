@@ -36,3 +36,13 @@ ROUGH PLAN
 ==========
 Version 1.0 will be a command-line application with batch processing.
 Version 1.1 will have an improved orientation/location determination algorithm.
+
+THANKS
+======
+* Thanks to Dr. Zelick for providing the lab and all the equipment.
+* Thanks to Nicholas Merrell for connecting me with the opportunity to work on an
+  interesting problem.
+* Thanks to JetBrains for kindly providing me with an open-source license for
+  their Python IDE, PyCharm, free of charge.
+* Thanks to the OpenCV developers for OpenCV.
+* Thanks to Jan Erik Solem for his book Programming Computer Vision with Python.
