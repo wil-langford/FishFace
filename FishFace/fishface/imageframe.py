@@ -10,8 +10,6 @@ import math
 
 try:
     import numpy as np
-    from PIL import ImageTk
-    from PIL import Image
 except ImportError:
     print "The imageframe module needs both numpy and PIL."
     print "In debian, install the \n  python-image-tk\n  python-imaging\n  python-numpy\npackages to meet these requirements."
@@ -108,8 +106,7 @@ It has two main attributes:
 # ##
     def onScreen(self, args=dict()):
         """I need something to display these things for debugging. This uses
-        OpenCV or Tkinter to display in a no-frills, any-key-to-dismiss window.
-        """
+        OpenCV to display in a no-frills, any-key-to-dismiss window."""
 
         if 'windowHeight' not in args:
             args['windowHeight'] = 500
@@ -119,57 +116,24 @@ It has two main attributes:
             args['scaleFactor'] = float(args['windowHeight'])/height
             print height, args['windowHeight'], args['scaleFactor']
 
-        if 'oldMethod' not in args:
-            args['oldMethod'] = False
+        if 'message' not in args:
+            args['message'] = "image display - any key to close"
 
-        if args['oldMethod']:
+        # def kill_window(event):
+        #     cv2.destroyWindow(args['message'])
 
-            if 'message' not in args:
-                args['message'] = "image display - any key or click to close"
+        cv2.namedWindow(args['message'], 0)
+        shape = self.data['spatialShape']
+        width = int(shape[1] * args['scaleFactor'])
+        height = int(shape[0] * args['scaleFactor'])
 
-            root = tk.Tk()
-            root.title(args['message'])
+        cv2.resizeWindow(args['message'], width, height)
+        # cv2.setMouseCallback(args['message'], kill_window)
 
-            def kill_window(event):
-                root.destroy()
-
-            root.bind("<Button>", kill_window)
-            root.bind("<Key>", kill_window)
-
-            im = Image.fromarray(self.array)
-            im = im.resize((int(im.size[0] * args['scaleFactor']),
-                            int(im.size[1] * args['scaleFactor'])))
-
-            photo = ImageTk.PhotoImage(im)
-
-            lbl = tk.Label(root, image=photo)
-            lbl.image = photo
-            lbl.pack()
-
-            root.mainloop()
-
-        else:
-
-            if 'message' not in args:
-                args['message'] = "image display - any key to close"
-
-            # def kill_window(event):
-            #     cv2.destroyWindow(args['message'])
-            
-            cv2.namedWindow(args['message'], 0)
-            shape = self.data['spatialShape']
-            width = int(shape[1] * args['scaleFactor'])
-            height = int(shape[0] * args['scaleFactor'])
-
-            print width, height, args['scaleFactor']
-
-            cv2.resizeWindow(args['message'], width, height)
-            # cv2.setMouseCallback(args['message'], kill_window)
-
-            cv2.imshow(args['message'], self.array)
-            cv2.startWindowThread()
-            cv2.waitKey(0)
-            cv2.destroyWindow(args['message'])
+        cv2.imshow(args['message'], self.array)
+        cv2.startWindowThread()
+        cv2.waitKey(0)
+        cv2.destroyWindow(args['message'])
 
 # ##
 # ##  Array-alterations
