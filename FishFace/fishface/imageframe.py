@@ -108,34 +108,68 @@ It has two main attributes:
 # ##
     def onScreen(self, args=dict()):
         """I need something to display these things for debugging. This uses
-        Tkinter to display in a no-frills, click-to-dismiss window."""
+        OpenCV or Tkinter to display in a no-frills, any-key-to-dismiss window.
+        """
 
-        if 'message' not in args:
-            args['message'] = "image display - any key or click to close"
+        if 'windowHeight' not in args:
+            args['windowHeight'] = 500
 
         if 'scaleFactor' not in args:
-            args['scaleFactor'] = 1
+            height = float(self.data['spatialShape'][0])
+            args['scaleFactor'] = float(args['windowHeight'])/height
+            print height, args['windowHeight'], args['scaleFactor']
 
-        root = tk.Tk()
-        root.title(args['message'])
+        if 'oldMethod' not in args:
+            args['oldMethod'] = False
 
-        def kill_window(event):
-            root.destroy()
+        if args['oldMethod']:
 
-        root.bind("<Button>", kill_window)
-        root.bind("<Key>", kill_window)
+            if 'message' not in args:
+                args['message'] = "image display - any key or click to close"
 
-        im = Image.fromarray(self.array)
-        im = im.resize((int(im.size[0] * args['scaleFactor']),
-                        int(im.size[1] * args['scaleFactor'])))
+            root = tk.Tk()
+            root.title(args['message'])
 
-        photo = ImageTk.PhotoImage(im)
+            def kill_window(event):
+                root.destroy()
 
-        lbl = tk.Label(root, image=photo)
-        lbl.image = photo
-        lbl.pack()
+            root.bind("<Button>", kill_window)
+            root.bind("<Key>", kill_window)
 
-        root.mainloop()
+            im = Image.fromarray(self.array)
+            im = im.resize((int(im.size[0] * args['scaleFactor']),
+                            int(im.size[1] * args['scaleFactor'])))
+
+            photo = ImageTk.PhotoImage(im)
+
+            lbl = tk.Label(root, image=photo)
+            lbl.image = photo
+            lbl.pack()
+
+            root.mainloop()
+
+        else:
+
+            if 'message' not in args:
+                args['message'] = "image display - any key to close"
+
+            # def kill_window(event):
+            #     cv2.destroyWindow(args['message'])
+            
+            cv2.namedWindow(args['message'], 0)
+            shape = self.data['spatialShape']
+            width = int(shape[1] * args['scaleFactor'])
+            height = int(shape[0] * args['scaleFactor'])
+
+            print width, height, args['scaleFactor']
+
+            cv2.resizeWindow(args['message'], width, height)
+            # cv2.setMouseCallback(args['message'], kill_window)
+
+            cv2.imshow(args['message'], self.array)
+            cv2.startWindowThread()
+            cv2.waitKey(0)
+            cv2.destroyWindow(args['message'])
 
 # ##
 # ##  Array-alterations
