@@ -7,8 +7,6 @@ import math
 try:
     import numpy as np
     from scipy import ndimage
-    from PIL import ImageTk
-    from PIL import Image
 except ImportError:
     print "The poser module requires, numpy, scipy, and PIL."
     raise
@@ -179,9 +177,9 @@ class Poser:
 
         return self.horsums[degrees]
 
-    def onScreen(self, degrees=None):
+    def onScreen(self, degrees=None, scaleFactor=1):
         """I need something to display these things for debugging. This uses
-        Tkinter to display in a no-frills, click-to-dismiss window."""
+        OpenCV to display in a no-frills, any-key-to-dismiss window."""
 
         if degrees:
             im = Image.fromarray(self.rotate(degrees))
@@ -190,25 +188,21 @@ class Poser:
             im = Image.fromarray(self.array)
             msg = "any key/click to continue"
 
-        root = tk.Tk()
-        root.title(msg)
+        caption = "image display - any key to close"
 
-        def kill_window(event):
-            root.destroy()
+        cv2.namedWindow(caption, 0)
+        shape = im.shape
+        width = int(shape[1] * scaleFactor)
+        height = int(shape[0] * scaleFactor)
 
-        root.bind("<Button>", kill_window)
-        root.bind("<Key>", kill_window)
+        cv2.resizeWindow(caption, width, height)
+        # cv2.setMouseCallback(caption, kill_window)
+        
+        cv2.imshow(caption, im)
+        cv2.startWindowThread()
+        cv2.waitKey(0)
+        cv2.destroyWindow(caption)
 
-        im = im.resize((int(im.size[0]),
-                        int(im.size[1])))
-
-        photo = ImageTk.PhotoImage(im)
-
-        lbl = tk.Label(root, image=photo)
-        lbl.image = photo
-        lbl.pack()
-
-        root.mainloop()
 
     def setArray(self, array, copyArray=True):
         # It's a numpy array. Store or copy it.
