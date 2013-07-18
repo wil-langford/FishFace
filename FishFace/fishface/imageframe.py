@@ -16,7 +16,6 @@ except ImportError:
     raise
 
 try:
-    import cv2.cv as cv
     import cv2
 except ImportError:
     print "The imageframe module needs OpenCV."
@@ -84,7 +83,7 @@ It has two main attributes:
     def setImageFromFile(self, filename):
         """Get image from file and store as my array."""
         if os.path.isfile(filename):
-            self.array = cv2.cvtColor(cv2.imread(filename), cv.CV_RGB2BGR)
+            self.array = cv2.cvtColor(cv2.imread(filename), cv2.COLOR_RGB2BGR)
             self.data['originalFileName'] = filename
             self.data['originalFileShape'] = self.array.shape
             if len(self.array.shape) == 2:
@@ -99,7 +98,7 @@ It has two main attributes:
         if self.data['channels'] == 1:
             cv2.imwrite(filename, self.array)
         elif self.data['channels'] == 3:
-            cv2.imwrite(filename, cv2.cvtColor(self.array, cv.CV_BGR2RGB))
+            cv2.imwrite(filename, cv2.cvtColor(self.array, cv2.COLOR_BGR2RGB))
 
 # ##
 # ##  Debug display
@@ -110,6 +109,9 @@ It has two main attributes:
 
         if 'windowHeight' not in args:
             args['windowHeight'] = 500
+
+        if 'delayAutoClose' not in args:
+            args['delayAutoClose'] = 10000
 
         if 'scaleFactor' not in args:
             height = float(self.data['spatialShape'][0])
@@ -132,7 +134,7 @@ It has two main attributes:
 
         cv2.imshow(args['message'], self.array)
         cv2.startWindowThread()
-        cv2.waitKey(0)
+        cv2.waitKey(args['delayAutoClose'])
         cv2.destroyWindow(args['message'])
 
 # ##
@@ -207,7 +209,7 @@ It has two main attributes:
     def applyGrayImage(self, args=dict()):
         """Convert to grayscale."""
         if self.data['channels'] == 3:
-            self.setImage(cv2.cvtColor(src=self.array, code=cv.CV_RGB2GRAY))
+            self.setImage(cv2.cvtColor(src=self.array, code=cv2.COLOR_RGB2GRAY))
 
     def applyDilate(self, args=dict()):
         """Morphological dilation with provided kernel."""
