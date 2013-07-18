@@ -16,7 +16,6 @@ except ImportError:
     raise
 
 try:
-    import cv2.cv as cv
     import cv2
 except ImportError:
     print "The capture module needs OpenCV."
