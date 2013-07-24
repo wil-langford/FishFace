@@ -4,15 +4,14 @@ The imageframe module provides the imageframe.Frame object (and some supporting 
 """
 
 import os
-import Tkinter as tk
 import copy
 import math
 
 try:
     import numpy as np
 except ImportError:
-    print "The imageframe module needs both numpy and PIL."
-    print "In debian, install the \n  python-image-tk\n  python-imaging\n  python-numpy\npackages to meet these requirements."
+    print "The imageframe module needs numpy."
+    print "In debian, install the python-numpy package to meet this requirements."
     raise
 
 try:
@@ -116,7 +115,6 @@ It has two main attributes:
         if 'scaleFactor' not in args:
             height = float(self.data['spatialShape'][0])
             args['scaleFactor'] = float(args['windowHeight'])/height
-            print height, args['windowHeight'], args['scaleFactor']
 
         if 'message' not in args:
             args['message'] = "image display - any key to close"
@@ -205,6 +203,29 @@ It has two main attributes:
         cv2.absdiff(src1=calFrame.array,
                     src2=self.array,
                     dst=self.array)
+
+    def applyRotate(self, args=dict()):
+        """Rotate the image array."""
+        if 'aroundPoint' not in args:
+            shape = np.array([self.data['spatialShape'][1], self.data['spatialShape'][0]])
+            args['aroundPoint'] = tuple((shape/2.0).astype(np.int32))
+
+        if 'scale' not in args:
+            args['scale'] = 1/(2.0 ** 0.5)
+
+        if 'angleDegrees' not in args:
+            args['angleDegrees'] = 0
+
+        if 'borderMode' not in args:
+            args['borderMode'] = cv2.BORDER_REPLICATE
+
+        if 'borderValue' not in args:
+            args['borderValue'] = 0
+
+        rotMatrix = cv2.getRotationMatrix2D(args['aroundPoint'], args['angleDegrees'], args['scale'])
+
+        self.array = cv2.warpAffine(self.array, rotMatrix, tuple(shape), borderMode=args['borderMode'],
+                                    borderValue=args['borderValue'])
 
     def applyGrayImage(self, args=dict()):
         """Convert to grayscale."""
