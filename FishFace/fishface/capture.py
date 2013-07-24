@@ -28,14 +28,22 @@ class IDSCamera():
 This object provides IDS-specific camera interface features.
     """
 
-    def __init__(self, settings=None):
+    def __init__(self, settings='IR'):
         self.cam = ueye.Cam()
 
-        if settings==None:
+        if settings is None:
             self.resetToDefault()
             self.setColorCorrection()
             self.setColorMode()
             self.setHardwareGain()
+
+        if settings == 'IR':
+            self.camPixClock = self.cam.SetPixelClock(20)
+            self.setColorCorrection()
+            self.setColorMode(mode=ueye.CM_MONO8)
+            self.camFrameRate = self.cam.SetFrameRate(1)
+            self.exposureTime = self.cam.SetExposureTime(10000)
+
 
     def resetToDefault(self):
         self.cam.ResetToDefault()
