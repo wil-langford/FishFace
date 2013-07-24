@@ -28,7 +28,7 @@ try:
     import imageframe
     import capture
 except ImportError:
-    print "Couldn't find FishFace libraries (poser.py, hopper.py, etc.)"
+    print "Couldn't find FishFace libraries (capture.py, imageframe.py, etc.)"
     raise
 
 class FishFaceCaptureError(Exception):
@@ -73,31 +73,23 @@ def main(arguments):
 
     source = (args.outpath, args.startNum, args.stopNum)
 
-    cam = ueye.Cam()
-    if cam.ResetToDefault() != ueye.SUCCESS:
-        #raise FishFaceCaptureError("Couldn't reset camera to defaults.")
-        print "WARNING: Camera didn't confirm that we reset it to defaults, but this is apparently normal."
-    if cam.SetColorMode(ueye.CM_BGR8_PACKED) != ueye.CM_BGR8_PACKED:
-        raise FishFaceCaptureError("Couldn't set color mode to BGR8 (24 bit color, BGR).")
-    if cam.SetColorCorrection(ueye.CCOR_DISABLE) != ueye.SUCCESS:
-        raise FishFaceCaptureError("Couldn't disable color correction on camera.")
-    
+    cam = capture.Camera()
+
     if args.stopNum < args.startNum:
         raise FishFaceCaptureError("stopNum must be greater than or equal to startNum.")
 
     if args.gain < 0 or args.gain > 100:
         raise FishFaceCaptureError("Gain must be between 0 and 100 (inclusive.)")
 
-    cam.SetHardwareGain(args.gain,0,0,0)
-
+    cam.cam.setHardwareGain(gain=args.gain)
 
     i = int(args.startNum)
 
-    ar = cam.GrabImage()
+    ar = cam.grabFrame()
     fr = imageframe.Frame(ar)
 
     while i <= args.stopNum:
-        ar = cam.GrabImage()
+        ar = cam.grabFrame()
         fr.setImage(ar)
         stamp = "{:08d}-{:010d}".format(i,int(time.time()))
         filename = args.outpath.format(stamp)
