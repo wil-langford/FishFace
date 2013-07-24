@@ -53,27 +53,32 @@ class Marker():
     def setMarker3(self, bgColor=255, fgColor=0):
         self.array = np.ones((1200,1600), dtype=np.uint8)*bgColor
 
+        self.shapes = dict()
 
-        triangle1 = (np.array([[0,0], [100,100], [0,400]]) + (400,400)).astype('int32')
-        triangle2 = (np.array([[0,400], [100,0], [100,400]]) + (1100,400)).astype('int32')
+        self.shapes['scalene'] = [(np.array([[0,0], [100,100], [0,400]]) + (400,400)).astype('int32')]
+        self.shapes['right'] = [(np.array([[0,400], [100,0], [100,400]]) + (1100,400)).astype('int32')]
 
-        border = [
+        self.shapes['border'] = [
             np.array([[0,0], [1600,0], [1600,1200], [0,1200]]).astype('int32'),
             np.array([[250,250], [1350,250], [1350,950], [250,950]]).astype('int32')
             ]
 
-        cv2.fillPoly(self.array, border, fgColor)
 
-        cv2.fillPoly(self.array, [triangle1], fgColor)
-        cv2.fillPoly(self.array, [triangle2], fgColor)
-
-
-class MarkerFinder():
-    def __init__(self):
-        pass
+        for key in self.shapes.keys():
+            cv2.fillPoly(self.array, self.shapes[key], fgColor)
 
     def findMarker3(self, frame, threshold=30, cropEdges=0.25, outerHullTolerance=50, innerPolyTolerance=5):
         frame.applyGrayImage()
+
+        self.shapes = dict()
+
+        self.shapes['scalene'] = [(np.array([[0,0], [100,100], [0,400]]) + (400,400)).astype('int32')]
+        self.shapes['right'] = [(np.array([[0,400], [100,0], [100,400]]) + (1100,400)).astype('int32')]
+
+        self.shapes['border'] = [
+            np.array([[0,0], [1600,0], [1600,1200], [0,1200]]).astype('int32'),
+            np.array([[250,250], [1350,250], [1350,950], [250,950]]).astype('int32')
+            ]
 
         Y = frame.data['spatialShape'][0]
         X = frame.data['spatialShape'][1]
@@ -90,11 +95,6 @@ class MarkerFinder():
 
         outerHull = cv2.approxPolyDP(cv2.convexHull(outerContours),outerHullTolerance,True)
         box = cv2.boxPoints(cv2.minAreaRect(outerHull))
-#        brec = cv2.boundingRect(box)
-#        innerar = 255 - ar[brec[1]:brec[1]+brec[3], brec[0]:brec[0]+brec[2]]
-
-        # innerar = innerar[::-1]
-
 
         allContours = cv2.findContours(ar.copy(), mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_SIMPLE)[1]
 
@@ -105,35 +105,84 @@ class MarkerFinder():
 
         polygons = [[list(point[0]) for point in shape] for shape in polygons]
 
-        polygons = [(polygon, len(polygon)) for polygon in polygons if len(polygon)>1]
+        triangles = [polygon for polygon in polygons if len(polygon)==3]
 
-        polygons.append([1,1])
+        scaleneScores = []
+        rightScores = []
 
-        triangles = [polygon[0] for polygon in polygons if polygon[1]==3]
+        for triangle in triangles:
+            scaleneScores.append(
+                cv2.matchShapes(np.array(self.shapes['scalene']),
+                np.array(triangle),
+                method=1, parameter=0.0)
+                )
+            rightScores.append(
+                cv2.matchShapes(np.array(self.shapes['right']),
+                np.array(triangle),
+                method=1, parameter=0.0)
+                )
 
-        # fr = imageframe.Frame(ar)
-        # fr.onScreen()
+        fs = np.array(triangles[scaleneScores.index(min(scaleneScores))])
+        fr = np.array(triangles[rightScores.index(min(rightScores))])
 
-        return box, triangles
+        ks = np.array(self.shapes['scalene'][0])
+        kr = np.array(self.shapes['right'][0])
+
+        fsa = np.array(self.anglesFromTriangleVertices(fs))
+        fra = np.array(self.anglesFromTriangleVertices(fr))
+
+        ksa = np.array(self.anglesFromTriangleVertices(ks))
+        kra = np.array(self.anglesFromTriangleVertices(kr))
+
+        spossibles = []
+        rpossibles = []
+
+        for i in range(3):
+            spossibles.append([np.roll(fs,i, axis=0),np.roll(fsa,i)])
+            spossibles.append([np.roll(fs[::-1],i, axis=0),np.roll(fsa[::-1],i)])
+            rpossibles.append([np.roll(fr,i, axis=0),np.roll(fra,i)])
+            rpossibles.append([np.roll(fr[::-1],i, axis=0),np.roll(fra[::-1],i)])
 
 
+        minsScore = 1000000
+        for sp in spossibles:
+            score = sum([(a-b)**2 for (a,b) in zip(sp[1],ksa)])
+            if minsScore > score:
+                minsScore = score
+                sVerts = sp[0].tolist()
 
-    def anglesFromTriangleVertices(self, verts):
-        verts = np.array(verts)
+        minrScore = 1000000
+        for rp in rpossibles:
+            score = sum([(a-b)**2 for (a,b) in zip(rp[1],kra)])
+            if minrScore > score:
+                minrScore = score
+                rVerts = rp[0].tolist()
+
+        #points = zip(sVerts,ks.tolist())
+        #points.extend(zip(rVerts,kr.tolist()))
+
+        points = zip(rVerts, kr.tolist())
+        points.extend(zip(sVerts,ks.tolist()))
+
+        return points
+
+
+    def anglesFromTriangleVertices(self, vertices):
+        vertices = np.array(vertices)
 
         vects = []
         for i in range(3):
-            vects.append(verts[i] - verts[(i+1)%3])
+            vects.append(vertices[i] - vertices[(i+1)%3])
 
-        sideLengths = [math.hypot(x[0],x[1]) for x in vects]
+        sideLengths = [math.hypot(x[0], x[1]) for x in vects]
 
-        def angleFromSides(a,b,c):
+        def angleFromSides(a, b, c):
             angle = math.acos((a**2 + b**2 - c**2)/(2*a*b))
             return math.degrees(angle)
 
         angles = []
         for i in range(3):
-            angles.append(angleFromSides(sideLengths[i],sideLengths[(i+1)%3],sideLengths[(i+2)%3]))
+            angles.append(angleFromSides(sideLengths[i], sideLengths[(i+1) % 3], sideLengths[(i+2) % 3]))
 
         return angles
 
