@@ -55,8 +55,12 @@ class Marker():
 
         self.shapes = dict()
 
-        self.shapes['scalene'] = [(np.array([[0,0], [100,100], [0,400]]) + (400,400)).astype('int32')]
-        self.shapes['right'] = [(np.array([[0,400], [100,0], [100,400]]) + (1100,400)).astype('int32')]
+        self.shapes['triangles'] = []
+
+        self.shapes['triangles'].append((np.array([[0,0], [100,100], [0,400]]) + (400,400)).astype('int32'))
+        self.shapes['triangles'].append((np.array([[0,400], [100,0], [100,400]]) + (1100,400)).astype('int32'))
+        self.shapes['triangles'].append((np.array([[50,0], [300,100], [0,200]]) + (600,700)).astype('int32'))
+        self.shapes['triangles'].append((np.array([[150,0], [250,200], [0,250]]) + (750,300)).astype('int32'))
 
         self.shapes['border'] = [
             np.array([[0,0], [1600,0], [1600,1200], [0,1200]]).astype('int32'),
@@ -64,21 +68,11 @@ class Marker():
             ]
 
 
-        for key in self.shapes.keys():
-            cv2.fillPoly(self.array, self.shapes[key], fgColor)
+        cv2.fillPoly(self.array, self.shapes['border'], fgColor)
+        cv2.fillPoly(self.array, self.shapes['triangles'], fgColor)
 
     def findMarker3(self, frame, threshold=30, cropEdges=0.25, outerHullTolerance=50, innerPolyTolerance=5):
         frame.applyGrayImage()
-
-        self.shapes = dict()
-
-        self.shapes['scalene'] = [(np.array([[0,0], [100,100], [0,400]]) + (400,400)).astype('int32')]
-        self.shapes['right'] = [(np.array([[0,400], [100,0], [100,400]]) + (1100,400)).astype('int32')]
-
-        self.shapes['border'] = [
-            np.array([[0,0], [1600,0], [1600,1200], [0,1200]]).astype('int32'),
-            np.array([[250,250], [1350,250], [1350,950], [250,950]]).astype('int32')
-            ]
 
         Y = frame.data['spatialShape'][0]
         X = frame.data['spatialShape'][1]
@@ -107,64 +101,78 @@ class Marker():
 
         triangles = [polygon for polygon in polygons if len(polygon)==3]
 
-        scaleneScores = []
-        rightScores = []
+        matchedPoints = []
 
-        for triangle in triangles:
-            scaleneScores.append(
-                cv2.matchShapes(np.array(self.shapes['scalene']),
-                np.array(triangle),
-                method=1, parameter=0.0)
-                )
-            rightScores.append(
-                cv2.matchShapes(np.array(self.shapes['right']),
-                np.array(triangle),
-                method=1, parameter=0.0)
-                )
+        for known in self.shapes['triangles']:
+            matchScores = []
+            for triangle in triangles:
+                matchScore = cv2.matchShapes(np.array(known),
+                        np.array(triangle),
+                        method=1, parameter=0.0)
+                matchScores.append(matchScore)
 
-        fs = np.array(triangles[scaleneScores.index(min(scaleneScores))])
-        fr = np.array(triangles[rightScores.index(min(rightScores))])
+            if min(matchScores) < 1:
+                found = np.array(triangles[matchScores.index(min(matchScores))])
 
-        ks = np.array(self.shapes['scalene'][0])
-        kr = np.array(self.shapes['right'][0])
+                foundAnglesRaw = np.array(self.anglesFromTriangleVertices(found))
+                knownAngles = np.array(self.anglesFromTriangleVertices(known))
 
-        fsa = np.array(self.anglesFromTriangleVertices(fs))
-        fra = np.array(self.anglesFromTriangleVertices(fr))
+                symmetries = [np.array(x) for x in
+                        [[0,1,2], [1,2,0], [2,0,1], [0,2,1], [2,1,0], [1,0,2]]
+                        ]
 
-        ksa = np.array(self.anglesFromTriangleVertices(ks))
-        kra = np.array(self.anglesFromTriangleVertices(kr))
+                minScore = None
+                for symmetry in symmetries:
+                    foundAngles = foundAnglesRaw[symmetry]
 
-        spossibles = []
-        rpossibles = []
+                    score = sum([(a-b)**2 for (a,b) in zip(foundAngles, knownAngles)])
 
-        for i in range(3):
-            spossibles.append([np.roll(fs,i, axis=0),np.roll(fsa,i)])
-            spossibles.append([np.roll(fs[::-1],i, axis=0),np.roll(fsa[::-1],i)])
-            rpossibles.append([np.roll(fr,i, axis=0),np.roll(fra,i)])
-            rpossibles.append([np.roll(fr[::-1],i, axis=0),np.roll(fra[::-1],i)])
+                    if minScore is None:
+                        minScore = score
+
+                    if minScore >= score:
+                        minScore = score
+                        orderedCorners = found[symmetry]
+
+                matchedPoints.extend(zip(orderedCorners.tolist(), known.tolist()))
+                # print "*** {}".format(matchedPoints)
 
 
-        minsScore = 1000000
-        for sp in spossibles:
-            score = sum([(a-b)**2 for (a,b) in zip(sp[1],ksa)])
-            if minsScore > score:
-                minsScore = score
-                sVerts = sp[0].tolist()
+        # scaleneScores = []
+        #
+        # for triangle in triangles:
+        #     scaleneScores.append(
+        #         cv2.matchShapes(np.array(self.shapes['scalene']),
+        #         np.array(triangle),
+        #         method=1, parameter=0.0)
+        #         )
+        #
+        # fs = np.array(triangles[scaleneScores.index(min(scaleneScores))])
+        #
+        # ks = np.array(self.shapes['scalene'][0])
+        #
+        # fsa = np.array(self.anglesFromTriangleVertices(fs))
+        #
+        # ksa = np.array(self.anglesFromTriangleVertices(ks))
+        #
+        # spossibles = []
+        #
+        # for i in range(3):
+        #     spossibles.append([np.roll(fs,i, axis=0),np.roll(fsa,i)])
+        #     spossibles.append([np.roll(fs[::-1],i, axis=0),np.roll(fsa[::-1],i)])
+        #
+        #
+        # minsScore = 1000000
+        # for sp in spossibles:
+        #     score = sum([(a-b)**2 for (a,b) in zip(sp[1],ksa)])
+        #     if minsScore > score:
+        #         minsScore = score
+        #         sVerts = sp[0].tolist()
+        #
+        # points = zip(rVerts, kr.tolist())
+        # points.extend(zip(sVerts,ks.tolist()))
 
-        minrScore = 1000000
-        for rp in rpossibles:
-            score = sum([(a-b)**2 for (a,b) in zip(rp[1],kra)])
-            if minrScore > score:
-                minrScore = score
-                rVerts = rp[0].tolist()
-
-        #points = zip(sVerts,ks.tolist())
-        #points.extend(zip(rVerts,kr.tolist()))
-
-        points = zip(rVerts, kr.tolist())
-        points.extend(zip(sVerts,ks.tolist()))
-
-        return points
+        return matchedPoints
 
 
     def anglesFromTriangleVertices(self, vertices):
