@@ -478,7 +478,7 @@ It has two main attributes:
         self.data['allContours'] =  cv2.findContours(self.array,
                                     mode=cv2.RETR_EXTERNAL,
                                     method=cv2.CHAIN_APPROX_SIMPLE
-                                    )[0]
+                                    )[1]
 
         return self.data['allContours']
 

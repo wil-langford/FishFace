@@ -66,11 +66,11 @@ def main(arguments):
                         action='store')
 
     parser.add_argument('--skip-threshold', dest='skipthresh', type=int,
-                        metavar="SKIP_THRESHOLD", default=600,
+                        metavar="SKIP_THRESHOLD", default=1000,
                         help='After cropping, if the sum of the fish silhouette''s bounding box dimensions is larger than this, skip the image.  Setting this lower reduces false positives in fish identification, but at the cost of potentially discarding valid images.',
                         action='store')
     parser.add_argument('--threshold-value', dest='threshold', type=int,
-                        metavar="THRESHOLD", default=60,
+                        metavar="THRESHOLD", default=35,
                         help='During image difference processing, what should the threshold be for filtering out the parts of the image that are similar?',
                         action='store')
     parser.add_argument('--kernel-radius', dest='ksize', type=int,
