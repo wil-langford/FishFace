@@ -129,17 +129,17 @@ def main(arguments):
             po = poser.Poser(frgray.array)
             angle = po.findLongAxis()
 
-            po2 = poser.Poser(frgray.array)
-            angle2 = po2.fastFindLongAxis()
+            #po2 = poser.Poser(frgray.array)
+            #angle2 = po2.fastFindLongAxis()
 
             if args.outfile:
                 with open(args.outfile, 'a') as f:
-                    # f.write("{}: angle {}\n".format(fr.data['originalFileName'], angle))
-                    f.write("{}: moment angle {}\n".format(fr.data['originalFileName'], angle2))
+                    f.write("{}: angle {}\n".format(fr.data['originalFileName'], angle))
+                    # f.write("{}: moment angle {}\n".format(fr.data['originalFileName'], angle2))
             else:
-                # print "{}: angle {}".format(fr.data['originalFileName'], angle)
+                print "{}: angle {}".format(fr.data['originalFileName'], angle)
                 # print "{}: moment angle {}".format(fr.data['originalFileName'], angle2)
-                print "{} Angle diff: {}\tAngle: {}\tAngle2: {}".format(fr.data['originalFileName'], (angle-angle2+180)%360-180,angle,angle2)
+                # print "{} Angle diff: {}\tAngle: {}\tAngle2: {}".format(fr.data['originalFileName'], (angle-angle2+180)%360-180,angle,angle2)
 
         else:
             print "skipped {}".format(fr.data['originalFileName'])
