@@ -1,4 +1,5 @@
 import math
+from numpy.core.tests.test_unicode import test_create_values_2_ucs2
 
 try:
     import numpy as np
@@ -112,7 +113,9 @@ class Marker():
         cv2.fillPoly(self.array, self.shapes['border'], fgColor)
 
 
-    def findMarkerPoints(self, frame, threshold = 30, cropEdges = 0.25, outerHullTolerance = 50, innerPolyTolerance = 5):
+    def findMarkerPoints(self, frame, threshold = 30, cropEdges = 0.35,
+                         outerHullTolerance = 50, innerPolyTolerance = 5,
+                         matchScoreThreshold=0.5, minimumTriangleArea=5000):
 
         # We are working with IR images, so color is meaningless.  Make sure we've got a single-channel image.
         frame.applyGrayImage()
@@ -192,30 +195,34 @@ class Marker():
                 matchScores.append(matchScore)
 
             # If we have at least one found triangle that is a pretty good match for the known triangle, then...
-            if min(matchScores) < 1:
+            if min(matchScores) < matchScoreThreshold:
                 # ... let found be the best match.
                 found = np.array(triangles[matchScores.index(min(matchScores))])
-                foundAnglesRaw = np.array(self.anglesFromTriangleVertices(found))
-                knownAngles = np.array(self.anglesFromTriangleVertices(known))
+                orderedCorners = []
 
-                minScore = None
-                for symmetry in symmetries:
-                    # Index the angles numpy array with the symmetry numpy array to "rotate" it.
-                    foundAngles = foundAnglesRaw[symmetry]
+                if cv2.moments(found)['m00'] > minimumTriangleArea:
+                    foundAnglesRaw = np.array(self.anglesFromTriangleVertices(found))
+                    knownAngles = np.array(self.anglesFromTriangleVertices(known))
 
-                    score = sum([(a-b)**2 for (a,b) in zip(foundAngles, knownAngles)])
+                    minScore = None
+                    for symmetry in symmetries:
+                        # Index the angles numpy array with the symmetry numpy array to "rotate" it.
+                        foundAngles = foundAnglesRaw[symmetry]
 
-                    if minScore is None:
-                        minScore = score
+                        score = sum([(a-b)**2 for (a,b) in zip(foundAngles, knownAngles)])
 
-                    # If we have a new minimum (i.e. better) score, then remember that this arrangement of
-                    # found triangle corners was the best match.
-                    if minScore >= score:
-                        minScore = score
-                        orderedCorners = found[symmetry]
+                        if minScore is None:
+                            minScore = score
+
+                        # If we have a new minimum (i.e. better) score, then remember that this arrangement of
+                        # found triangle corners was the best match.
+                        if minScore >= score:
+                            minScore = score
+                            orderedCorners = found[symmetry]
 
                 # Add the corresponding (found, known) coordinate pairs to the list of matched points.
-                matchedPoints.extend(zip(orderedCorners.tolist(), known.tolist()))
+                if len(orderedCorners) > 0:
+                    matchedPoints.extend(zip(orderedCorners.tolist(), known.tolist()))
 
         return matchedPoints
 
@@ -229,18 +236,36 @@ class Marker():
         # FIXME: still needs to do color matching - waiting on camera-specific calibration for that
 
         matchedPoints = self.findMarkerPoints(frame)
-        # Python idioms to "unzip" the zipped matchPoints list.
-        srcPoints = np.float32(zip(*matchedPoints)[0])
-        dstPoints = np.float32(zip(*matchedPoints)[1])
 
-        homography = cv2.findHomography(srcPoints,dstPoints)[0]
+        if len(matchedPoints) >=6:
+            # Python idioms to "unzip" the zipped matchPoints list.
+            srcPoints = np.float32(zip(*matchedPoints)[0])
+            dstPoints = np.float32(zip(*matchedPoints)[1])
 
-        arraySize = (self.array.shape[1], self.array.shape[0])
+            # frcopy = frame.copy()
+            # frcopy.drawCirclesAtPoints({'points':srcPoints, 'circleRadius':10})
+            # frcopy.onScreen({'delayAutoClose':0})
+            #
+            # xdmin = np.amin(dstPoints[:,0])
+            # ydmin = np.amin(dstPoints[:,1])
+            # xsmin = np.amin(srcPoints[:,0])
+            # ysmin = np.amin(srcPoints[:,1])
+            #
+            # print "found {} matched points".format(len(srcPoints))
+            # for pair in matchedPoints:
+            #     pr = pair - np.array([[xsmin,ysmin],[xdmin, ydmin]])
+            #     print pr[0], pr[1]
 
-        srcArray = frame.array.astype(np.float64) / 255
-        dstArray = (cv2.warpPerspective(srcArray, homography, arraySize) * 255).astype(np.uint8)
+            homography = cv2.findHomography(srcPoints,dstPoints)[0]
 
-        diffArray = cv2.absdiff(dstArray, self.array)
+            arraySize = (self.array.shape[1], self.array.shape[0])
+
+            srcArray = frame.array.astype(np.float64) / 255
+            dstArray = (cv2.warpPerspective(srcArray, homography, arraySize) * 255).astype(np.uint8)
+
+            diffArray = cv2.absdiff(dstArray, self.array)
+        else:
+            diffArray = np.ones(frame.array.shape, dtype=np.uint8) * 255
 
         return diffArray
 
