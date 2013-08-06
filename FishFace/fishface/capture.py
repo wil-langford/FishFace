@@ -28,16 +28,16 @@ class IDSCamera():
 This object provides IDS-specific camera interface features.
     """
 
-    def __init__(self, settings='IR'):
+    def __init__(self, lightType=None):
         self.cam = ueye.Cam()
 
-        if settings is None:
+        if lightType == 'visible':
             self.resetToDefault()
             self.setColorCorrection()
             self.setColorMode()
             self.setHardwareGain()
 
-        if settings == 'IR':
+        if lightType == 'IR' or lightType is None:
             self.camPixClock = self.cam.SetPixelClock(20)
             self.setColorCorrection()
             self.setColorMode(mode=ueye.CM_MONO8)
@@ -70,17 +70,22 @@ This object provides IDS-specific camera interface features.
 
 class OpenCVCamera():
     """
+NOT FULLY IMPLEMENTED; DO NOT USE
 This object provides generic OpenCV camera interface features.
 
 It currently uses the default camera with no provision to select among
 multiple cameras.
+
+This object is currently not fully implemented, and should not yet be used.
+I thought at one point that the IDS camera would not work, and started working
+on more generic capture routines.
     """
 
-    def __init__(self, settings=None):
+    def __init__(self, lightType=None):
         self.cam = cv2.VideoCapture()
         self.cam.open(-1)
 
-        if settings==None:
+        if lightType is None:
             pass
 
     def grabFrame(self):
@@ -94,13 +99,13 @@ The Camera object is FishFace's generic view of all supported cameras.  Its
 primary method is grabFrame().
     """
 
-    def __init__(self, camType='IDS'):
+    def __init__(self, camType='IDS', lightType=None):
         self.method=camType
 
         if camType=='IDS':
-            self.cam = IDSCamera()
+            self.cam = IDSCamera(lightType = lightType)
         elif camType=='OpenCV':
-            self.cam = OpenCVCamera()
+            self.cam = OpenCVCamera(lightType = lightType)
         else:
             raise CaptureError("Unsupported camera type: {}".format(camType))
 
