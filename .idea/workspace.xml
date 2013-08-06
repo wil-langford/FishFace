@@ -5,15 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="74424c92-0fef-4161-8ba9-8f913e8cf33e" name="Default" comment="Got rid of PIL dependency.">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/FishFace/bin/FishFace Capture.ipynb" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/FishFace/bin/ipythonsupport.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FishFace/bin/FishFace Setup and Maintenance.ipynb" afterPath="$PROJECT_DIR$/FishFace/bin/FishFace Setup and Maintenance.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FishFace/fishface/capture.py" afterPath="$PROJECT_DIR$/FishFace/fishface/capture.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="FishFace.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1375813262321" ignored="false" />
+    <file path="/Dummy.txt" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1375813876983" ignored="false" />
     <file path="/FishFace.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1373571387871" ignored="false" />
     <file path="/hopper.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1372802207466" ignored="false" />
     <file path="/poser.py" changelist="74424c92-0fef-4161-8ba9-8f913e8cf33e" time="1374013428518" ignored="false" />
@@ -63,7 +59,7 @@
       <file leaf-file-name="ipythonsupport.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/FishFace/bin/ipythonsupport.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="82" column="58" selection-start="2131" selection-end="2131" vertical-scroll-proportion="0.38621587">
+            <state line="82" column="58" selection-start="2131" selection-end="2131" vertical-scroll-proportion="0.38722295">
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -529,7 +525,15 @@
       <created>1375727028309</created>
       <updated>1375727028309</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="PyCharm IDE stuff.">
+      <created>1375813490106</created>
+      <updated>1375813490106</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Got rid of PIL dependency.">
+      <created>1375813873718</created>
+      <updated>1375813873718</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -556,6 +560,7 @@
     <frame x="37" y="36" width="1243" height="942" extended-state="0" />
     <editor active="false" />
     <layout>
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3279099" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32942164" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -570,7 +575,6 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3274559" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24958678" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -618,7 +622,7 @@
     <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="Started work on iPython Notebook frontend." />
+    <option name="LAST_COMMIT_MESSAGE" value="Got rid of PIL dependency." />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -632,7 +636,6 @@
     <option name="UPDATE_FILTER_BY_SCOPE" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
-    <MESSAGE value="Finished imageframe.data refactoring.  I think." />
     <MESSAGE value="Bug fixes, centroid computation, and drawing method." />
     <MESSAGE value="Added delay and gain controls to capture script." />
     <MESSAGE value="Fiddling with marker generation/detection." />
@@ -646,7 +649,6 @@
     <MESSAGE value="Added attribution section." />
     <MESSAGE value="Got rid of cv2.cv dependency thanks to new local build of the current OpenCV git repository.  Also added autoclose by default to onScreen." />
     <MESSAGE value="Got rid of cv2.cv dependency." />
-    <MESSAGE value="Got rid of PIL dependency." />
     <MESSAGE value="Added applyRotate method and cleaned up some other minor things." />
     <MESSAGE value="Plugging away at marker recognition." />
     <MESSAGE value="Switched FishFaceCapture.py to use the capture.py module." />
@@ -657,6 +659,8 @@
     <MESSAGE value="Made some changes for IR imagery and some changes in new version of OpenCV." />
     <MESSAGE value="Swapped back to good algorithm for analysis." />
     <MESSAGE value="Started work on iPython Notebook frontend." />
+    <MESSAGE value="PyCharm IDE stuff." />
+    <MESSAGE value="Got rid of PIL dependency." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -759,7 +763,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/FishFace/bin/ipythonsupport.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="82" column="58" selection-start="2131" selection-end="2131" vertical-scroll-proportion="0.38621587">
+        <state line="82" column="58" selection-start="2131" selection-end="2131" vertical-scroll-proportion="0.38722295">
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
