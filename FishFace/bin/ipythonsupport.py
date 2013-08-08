@@ -13,12 +13,14 @@ class FFiPySupport:
     WARN = 1
     ERR = 2
     FINAL = -1
+    DEBUG = -2
     CHECKPOINT = FINAL
 
     PREFIX = {
             INFO: '[INFO]',
             WARN: '[\x1b[31mWARNING\x1b[0m]',
             ERR: '[\x1b[31mERROR\x1b[0m]',
+            DEBUG: '[DEBUG]',
             'OK': '[\x1b[32mOK\x1b[0m]'
         }
 
@@ -26,6 +28,9 @@ class FFiPySupport:
 
     def __init__(self):
         self.flag = self.INFO
+        self.lastSeriesTimestamp = None
+        self.wakeUpTimestamp = None
+        self.debug = False
 
     def msg(self, message, messageType=INFO):
 
@@ -38,7 +43,8 @@ class FFiPySupport:
             self.reset()
 
         else:
-            print "{} {}".format(self.PREFIX[messageType], message)
+            if self.debug or messageType != self.DEBUG:
+                print "{} {}".format(self.PREFIX[messageType], message)
 
             self.flag = max(self.flag, messageType)
 
@@ -89,16 +95,36 @@ class FFiPySupport:
             del self.cam
 
 
-    def grabDataFrames(self, dataSeries, numData, expDir, dataPrefix, interval):
-        for i in range(numData):
-            self.wakeUpAt(time.time() + interval)
-            dataFilename = os.path.join(expDir,
-                                        "{}-{:03d}-{}.jpg".format(dataPrefix, dataSeries, self.dtg()))
+    def grabDataSeries(self, dataSeries, numData, expDir, dataPrefix, interval, lightType='IR'):
+        self.msg("Capturing {} data points at {} second intervals.".format(numData, interval))
+        self.msg("Accessing camera.")
+        self.cam = capture.Camera(lightType=lightType)
+        self.msg("Camera accessed.")
 
+        for i in range(1, numData+1):
+            now = time.time()
+
+            if self.lastSeriesTimestamp is not None:
+                self.msg("actual interval: {:03f}".format(now - self.lastSeriesTimestamp), self.DEBUG)
+                if self.lastSeriesTimestamp + interval > now:
+                    self.msg("on time {:03f}".format(self.lastSeriesTimestamp + interval - now), self.DEBUG)
+                    self.wakeUpAt(self.lastSeriesTimestamp + interval)
+                else:
+                    self.msg("overtime {:03f}".format(self.lastSeriesTimestamp + interval - now), self.DEBUG)
+                    self.wakeUpAt(now + interval)
+            else:
+                self.wakeUpAt(now + interval)
+            self.lastSeriesTimestamp = now
+
+            dataFilename = os.path.join(expDir, "{}-{:03d}-{}-{:05d}.jpg".format(dataPrefix, dataSeries, self.dtg(), i))
             self.grabImage(dataFilename)
+            self.msg("Grabbed image number {}/{} in data series {}.".format(i, numData, dataSeries))
 
             self.goToSleep()
-            self.msg("Grabbed image number {} in data series {}.".format(i, dataSeries))
+
+        del self.cam
+        self.msg("Camera closed.")
+        self.lastSeriesTimestamp = None
 
     def wakeUpAt(self, timestamp):
         self.wakeUpTimestamp = timestamp
