@@ -3,9 +3,10 @@ import os
 import shutil
 import datetime
 import time
+import datetime
 
 sys.path.append(os.path.join('..','fishface'))
-import capture, imageframe, hopper
+import capture, imageframe, hopper, poser
 
 class FFiPySupport:
 
@@ -14,6 +15,7 @@ class FFiPySupport:
     ERR = 2
     FINAL = -1
     DEBUG = -2
+    WRITE = -3
     CHECKPOINT = FINAL
 
     PREFIX = {
@@ -33,6 +35,10 @@ class FFiPySupport:
         self.debug = False
 
     def msg(self, message, messageType=INFO):
+
+        if messageType == self.WRITE:
+            sys.stdout.write(message)
+            return
 
         if messageType == self.FINAL:
             if self.flag == self.INFO:
@@ -76,6 +82,10 @@ class FFiPySupport:
 
         return dt.strftime(self.DATE_FORMAT)
 
+    def dtgRead(self, string):
+        return datetime.datetime.strptime(string, self.DATE_FORMAT)
+
+
     def grabImage(self, filename, isCal=False, lightType='IR'):
         if isCal:
             try:
@@ -101,7 +111,11 @@ class FFiPySupport:
         self.cam = capture.Camera(lightType=lightType)
         self.msg("Camera accessed.")
 
+        self.msg("Beginning capture of {} images in data series {}.".format(numData, dataSeries))
+        self.msg("One dot will print per image captured. (10 dots per group, 10 groups per line.)")
+
         for i in range(1, numData+1):
+
             now = time.time()
 
             if self.lastSeriesTimestamp is not None:
@@ -118,11 +132,19 @@ class FFiPySupport:
 
             dataFilename = os.path.join(expDir, "{}-{:03d}-{}-{:05d}.jpg".format(dataPrefix, dataSeries, self.dtg(), i))
             self.grabImage(dataFilename)
-            self.msg("Grabbed image number {}/{} in data series {}.".format(i, numData, dataSeries))
+            self.msg("Grabbed image number {}/{} in data series {}.".format(i, numData, dataSeries), self.DEBUG)
+
+            self.msg('.', self.WRITE)
+            if i%100 == 0:
+                self.msg('\n', self.WRITE)
+            elif i%10 == 0:
+                self.msg(' ', self.WRITE)
 
             self.goToSleep()
 
         del self.cam
+        self.msg('\n', self.WRITE)
+
         self.msg("Camera closed.")
         self.lastSeriesTimestamp = None
 
@@ -134,3 +156,119 @@ class FFiPySupport:
             while time.time() < self.wakeUpTimestamp:
                 time.sleep(self.wakeUpTimestamp - time.time())
             self.wakeUpTimestamp = None
+
+    def listExperimentDirs(self,dataDir):
+        root, self.dataDirs, dataFiles = os.walk(dataDir).next()
+        self.dataDirs = [os.path.join(root, dir) for dir in self.dataDirs]
+
+        print "*" * 50
+        print "Please select an experiment to analyze by number from the list below."
+        for i, dir in enumerate(self.dataDirs):
+            print "{}: {}".format(i,dir)
+
+
+    def analyzeExperiment(self, expDirIdx, calPrefix, dataPrefix, threshold, outFilename=None):
+        experimentDir = self.dataDirs[expDirIdx]
+        print experimentDir
+        if not os.path.exists(experimentDir):
+            self.msg("Selected experiment directory does not exist.", self.ERR)
+            return
+
+        try:
+            root, dirs, files = os.walk(experimentDir).next()
+        except StopIteration:
+            pass
+
+        calFiles = [filename for filename in files if filename[:len(calPrefix)] == calPrefix]
+        if len(calFiles) == 0:
+            self.msg("Could not find a calibration file with the given prefix: {}".format(calPrefix), self.ERR)
+            return
+        elif len(calFiles) > 1:
+            self.msg(
+                "Found too many calibration files with prefix: " +
+                "{}\nDelete all but the one you want to use to proceed.".format(calPrefix),
+                self.ERR)
+            return
+        else:
+            calFile = os.path.join(root,calFiles[0])
+            calFrame = imageframe.Frame(calFile)
+            self.msg("Using discovered calibration file: {}".format(calFile))
+
+        self.msg("Indexing data files.")
+
+        dataFiles = sorted([os.path.join(root,filename) for filename in files
+                            if filename[:len(dataPrefix)] == dataPrefix])
+        dataFiles.insert(0,"ACTUAL")
+
+        self.msg("Found {} data files to process.".format(len(dataFiles)))
+
+        chainProcessList = [
+            ('deltaImage', {'calImageFrame': calFrame}),
+            ('grayImage', {}),
+            ('threshold', {'threshold': threshold}),
+            ('closing', {'kernelRadius': 3}),
+            ('opening', {'kernelRadius': 3}),
+            ('cropToLargestBlob', {})
+        ]
+
+        self.msg("Building hopper chain.")
+        HC = hopper.HopperChain(dataFiles, chainProcessList)
+
+        self.msg("Starting hopper chain.")
+
+        outFile = None
+        if outFilename is not None:
+            outFile = open(os.path.join(experimentDir, outFilename), 'w')
+            outFile.write(
+                ','.join([
+                    "Data Series",
+                    "Timestamp",
+                    "Serial number within series",
+                    "Angle",
+                    "Original Filename"
+                ]) + "\n"
+            )
+
+        self.msg("One dot will print per image processed. (10 dots per group, 10 groups per line.)")
+        i = 0
+        startProcessingTimestamp = time.time()
+
+        for fr in HC:
+            po = poser.Poser(fr.array)
+            angle = po.findLongAxis()
+
+            filename = fr.data['originalFileName']
+            filenameParsed = os.path.basename(filename)[:-4].split("-")
+
+            prefix, series, year, month, day, timeString, serial = filenameParsed
+            dt = self.dtgRead('-'.join(filenameParsed[2:6]))
+            timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
+
+            self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename), self.DEBUG)
+
+            if outFile is not None:
+                outFile.write('{}, {}, {}, {}, "{}"\n'.format(series, timestamp, serial, angle, filename))
+                self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename), self.DEBUG)
+            else:
+                self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename))
+
+            self.msg('.', self.WRITE)
+
+            i=i+1
+            if i%100 == 0:
+                self.msg('\n', self.WRITE)
+            elif i%10 == 0:
+                self.msg(' ', self.WRITE)
+
+        outFile.close()
+
+        self.msg('\n', self.WRITE)
+        self.msg("Data analysis complete.", self.FINAL)
+        pTime = time.time() - startProcessingTimestamp
+        self.msg("Processing took {} total seconds ({} seconds per image.)".format(pTime, pTime / i))
+
+        if outFile is not None:
+            self.msg("Results have been written to the output file: {}".format(outFilename))
+
+
+
