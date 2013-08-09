@@ -101,7 +101,11 @@ class Hopper:
     def __init__(self, origInput, directory="./"):
         self.origInput = origInput
         if type(origInput) == list:
-            self.fillFromListOfFilenames(origInput, directory)
+            if (origInput[0] == 'ACTUAL'):
+                self.contents = origInput[1:]
+                self.parentHopper = None
+            else:
+                self.fillFromListOfFilenames(origInput, directory)
 
         elif type(origInput) == tuple:
             step = 1

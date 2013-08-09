@@ -38,12 +38,12 @@ This object provides IDS-specific camera interface features.
             self.setHardwareGain()
 
         if lightType == 'IR' or lightType is None:
-            self.camPixClock = self.cam.SetPixelClock(20)
             self.setColorCorrection()
             self.setColorMode(mode=ueye.CM_MONO8)
-            self.camFrameRate = self.cam.SetFrameRate(1)
-            self.exposureTime = self.cam.SetExposureTime(10000)
-
+            self.camPixClock = self.cam.SetPixelClock(25)
+            self.camFrameRate = self.cam.SetFrameRate(6)
+            self.exposureTime = self.cam.SetExposureTime(80)
+            self.setHardwareGain(100)
 
     def resetToDefault(self):
         self.cam.ResetToDefault()
