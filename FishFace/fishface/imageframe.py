@@ -486,13 +486,15 @@ It has two main attributes:
         """Convenience method to find the bounding box of a contour. Output is a tuple
         of the form (y_min, x_min, y_max, x_max).  The border is an optional extra
         margin to include in the cropped image."""
-        maxes = np.amax(contour, axis=1)[0, 0]
-        mins = np.amin(contour, axis=1)[0, 0]
 
-        return (max(mins[1] - border, 0),
-                max(mins[0] - border, 0),
-                min(maxes[1] + border, self.xdim - 1),
-                min(maxes[0] + border, self.ydim - 1))
+        xCorner, yCorner, width, height = cv2.boundingRect(contour[0])
+
+        xMin = max(0, xCorner - border)
+        yMin = max(0, yCorner - border)
+        xMax = min(self.xdim - 1, xCorner + width + border)
+        yMax = min(self.ydim - 1, yCorner + height + border)
+
+        return (yMin, xMin, yMax, xMax)
 
     def kernel(self, radius=3, shape="circle"):
         """Convenience method wrapping the cv2.getStructuringElement method.
