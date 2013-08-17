@@ -32,6 +32,8 @@ class FFiPySupport:
         self.flag = self.INFO
         self.lastSeriesTimestamp = None
         self.wakeUpTimestamp = None
+
+        # This line enables DEBUG output.
         self.debug = False
 
     def msg(self, message, messageType=INFO):
@@ -222,8 +224,9 @@ class FFiPySupport:
             outFile.write(
                 ','.join([
                     "Data Series",
+                    "Serial Number",
                     "Timestamp",
-                    "Serial number within series",
+                    "Seconds Since Series Start",
                     "Angle",
                     "Original Filename"
                 ]) + "\n"
@@ -233,7 +236,10 @@ class FFiPySupport:
         i = 0
         startProcessingTimestamp = time.time()
 
+        firstFrameTimestamp = None
+
         for fr in HC:
+
             po = poser.Poser(fr.array)
             angle = po.findLongAxis()
 
@@ -242,15 +248,18 @@ class FFiPySupport:
 
             prefix, series, year, month, day, timeString, serial = filenameParsed
             dt = self.dtgRead('-'.join(filenameParsed[2:6]))
+            if firstFrameTimestamp is None:
+                firstFrameTimestamp = dt
             timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
-
-            self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename), self.DEBUG)
+            deltaSeconds = (dt - firstFrameTimestamp).total_seconds()
 
             if outFile is not None:
-                outFile.write('{}, {}, {}, {}, "{}"\n'.format(series, timestamp, serial, angle, filename))
-                self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename), self.DEBUG)
+                outFile.write('{}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, filename))
+                messageTarget = self.DEBUG
             else:
-                self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename))
+                messageTarget = self.INFO
+
+            self.msg('{}, {}, {}, {}, {}, "{}"'.format(series, serial, timestamp, deltaSeconds, angle, filename), messageTarget)
 
             self.msg('.', self.WRITE)
 
