@@ -202,7 +202,7 @@ class FFiPySupport:
                             if filename[:len(dataPrefix)] == dataPrefix])
         dataFiles.insert(0,"ACTUAL")
 
-        self.msg("Found {} data files to process.".format(len(dataFiles)))
+        self.msg("Found {} data files to process.".format(len(dataFiles)-1))
 
         chainProcessList = [
             ('deltaImage', {'calImageFrame': calFrame}),
