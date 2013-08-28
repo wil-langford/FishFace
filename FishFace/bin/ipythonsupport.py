@@ -107,7 +107,7 @@ class FFiPySupport:
             del self.cam
 
 
-    def grabDataSeries(self, dataSeries, numData, expDir, dataPrefix, interval, lightType='IR'):
+    def grabDataSeries(self, dataSeries, numData, expDir, dataPrefix, interval, voltage, lightType='IR'):
         self.msg("Capturing {} data points at {} second intervals.".format(numData, interval))
         self.msg("Accessing camera.")
         self.cam = capture.Camera(lightType=lightType)
@@ -132,7 +132,7 @@ class FFiPySupport:
                 self.wakeUpAt(now + interval)
             self.lastSeriesTimestamp = now
 
-            dataFilename = os.path.join(expDir, "{}-{:03d}-{}-{:05d}.jpg".format(dataPrefix, dataSeries, self.dtg(), i))
+            dataFilename = os.path.join(expDir, "{}-{:03d}-{:05d}-{}-{:0.2f}V.jpg".format(dataPrefix, dataSeries, i, self.dtg(), voltage))
             self.grabImage(dataFilename)
             self.msg("Grabbed image number {}/{} in data series {}.".format(i, numData, dataSeries), self.DEBUG)
 
@@ -228,6 +228,7 @@ class FFiPySupport:
                     "Timestamp",
                     "Seconds Since Series Start",
                     "Angle",
+                    "Voltage",
                     "Original Filename"
                 ]) + "\n"
             )
@@ -244,22 +245,24 @@ class FFiPySupport:
             angle = po.findLongAxis()
 
             filename = fr.data['originalFileName']
-            filenameParsed = os.path.basename(filename)[:-4].split("-")
+            filenameParsed = os.path.basename(filename)[:-5].split("-")
 
-            prefix, series, year, month, day, timeString, serial = filenameParsed
-            dt = self.dtgRead('-'.join(filenameParsed[2:6]))
+            prefix, series, serial, year, month, day, timeString, voltage = filenameParsed
+            dt = self.dtgRead('-'.join(filenameParsed[3:7]))
             if firstFrameTimestamp is None:
                 firstFrameTimestamp = dt
             timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
             deltaSeconds = (dt - firstFrameTimestamp).total_seconds()
 
+            dataString = '{}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, filename)
+
             if outFile is not None:
-                outFile.write('{}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, filename))
+                outFile.write(dataString)
                 messageTarget = self.DEBUG
             else:
                 messageTarget = self.INFO
 
-            self.msg('{}, {}, {}, {}, {}, "{}"'.format(series, serial, timestamp, deltaSeconds, angle, filename), messageTarget)
+            self.msg(dataString, messageTarget)
 
             self.msg('.', self.WRITE)
 
