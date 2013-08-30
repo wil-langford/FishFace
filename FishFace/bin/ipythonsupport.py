@@ -169,7 +169,7 @@ class FFiPySupport:
             print "{}: {}".format(i,dir)
 
 
-    def analyzeExperiment(self, expDirIdx, calPrefix, dataPrefix, threshold, outFilename=None):
+    def analyzeExperiment(self, expDirIdx, calPrefix, dataPrefix, threshold, outFilenamePrefix=None):
         experimentDir = self.dataDirs[expDirIdx]
         print experimentDir
         if not os.path.exists(experimentDir):
@@ -219,7 +219,9 @@ class FFiPySupport:
         self.msg("Starting hopper chain.")
 
         outFile = None
-        if outFilename is not None:
+        if outFilenamePrefix is not None:
+            bareDirName = os.path.basename(experimentDir)
+            outFilename = "{}_{}_analysis-run-at-{}.csv".format(outFilenamePrefix, bareDirName, self.dtg())
             outFile = open(os.path.join(experimentDir, outFilename), 'w')
             outFile.write(
                 ','.join([
