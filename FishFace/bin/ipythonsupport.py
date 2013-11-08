@@ -210,7 +210,8 @@ class FFiPySupport:
             ('threshold', {'threshold': threshold}),
             ('closing', {'kernelRadius': 3}),
             ('opening', {'kernelRadius': 3}),
-            ('cropToLargestBlob', {})
+            ('cropToLargestBlob', {}),
+            ('findCentroid', {})
         ]
 
         self.msg("Building hopper chain.")
@@ -231,6 +232,7 @@ class FFiPySupport:
                     "Seconds Since Series Start",
                     "Angle",
                     "Voltage",
+                    "Position",
                     "Original Filename"
                 ]) + "\n"
             )
@@ -245,6 +247,9 @@ class FFiPySupport:
 
             po = poser.Poser(fr.array)
             angle = po.findLongAxis()
+            position = fr.data['absoluteCentroid']
+
+            self.msg(position, self.INFO)
 
             filename = fr.data['originalFileName']
             filenameParsed = os.path.basename(filename)[:-5].split("-")
@@ -256,7 +261,7 @@ class FFiPySupport:
             timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
             deltaSeconds = (dt - firstFrameTimestamp).total_seconds()
 
-            dataString = '{}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, filename)
+            dataString = '{}, {}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, position, filename)
 
             if outFile is not None:
                 outFile.write(dataString)
