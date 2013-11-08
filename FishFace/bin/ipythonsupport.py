@@ -3,7 +3,8 @@ import os
 import shutil
 import datetime
 import time
-import datetime
+import numpy as np
+import cv2
 
 sys.path.append(os.path.join('..','fishface'))
 import capture, imageframe, hopper, poser
@@ -168,8 +169,63 @@ class FFiPySupport:
         for i, dir in enumerate(self.dataDirs):
             print "{}: {}".format(i,dir)
 
+    def renderPOI(self, expDirIdx, calPrefix, POI=0):
+        experimentDir = self.dataDirs[expDirIdx]
+        print experimentDir
+        if not os.path.exists(experimentDir):
+            self.msg("Selected experiment directory does not exist.", self.ERR)
+            return
 
-    def analyzeExperiment(self, expDirIdx, calPrefix, dataPrefix, threshold, outFilenamePrefix=None):
+        try:
+            root, dirs, files = os.walk(experimentDir).next()
+        except StopIteration:
+                pass
+
+        calFiles = [filename for filename in files if filename[:len(calPrefix)] == calPrefix]
+        if len(calFiles) == 0:
+            self.msg("Could not find a calibration file with the given prefix: {}".format(calPrefix), self.ERR)
+            return
+        elif len(calFiles) > 1:
+            self.msg(
+                "Found too many calibration files with prefix: " +
+                "{}\nDelete (or rename without the '{}' prefix) all but the one you want to use to proceed.".format(calPrefix,calPrefix),
+                self.ERR)
+            return
+        else:
+            calFile = os.path.join(root,calFiles[0])
+            cf = imageframe.Frame(calFile)
+            self.msg("Using discovered calibration file: {}".format(calFile))
+
+            if POI != 0:
+                if len(POI) < 2:
+                    self.msg("POI needs to be 0 or a list of points. If it's a list of points, there must be at least 2 points in the list.", self.ERR)
+                elif len(POI)==2:
+                    POI.append( [POI[0][0], POI[1][1]])
+                    POI.insert(1, [POI[1][0], POI[0][1]])
+
+                ctrs = np.array([[POI]])
+
+                cf.drawContours({
+                    "contours": ctrs,
+                    "filledIn": False,
+                    "lineThickness": 8
+                })
+            else:
+                ctrs = None
+
+            displayShape = (640,480)
+            cf.applyResize({
+                "newshape": displayShape
+            })
+
+            outFilename = os.path.join(root,"POI-image.jpg")
+            cf.saveImageToFile(outFilename)
+
+            return [outFilename, ctrs]
+
+        return [None, None]
+
+    def analyzeExperiment(self, expDirIdx, calPrefix, dataPrefix, threshold, outFilenamePrefix=None, poiContours=None):
         experimentDir = self.dataDirs[expDirIdx]
         print experimentDir
         if not os.path.exists(experimentDir):
@@ -233,6 +289,7 @@ class FFiPySupport:
                     "Angle",
                     "Voltage",
                     "Position",
+                    "POI Score",
                     "Original Filename"
                 ]) + "\n"
             )
@@ -248,8 +305,10 @@ class FFiPySupport:
             po = poser.Poser(fr.array)
             angle = po.findLongAxis()
             position = fr.data['absoluteCentroid']
-
-            self.msg(position, self.INFO)
+            if poiContours is not None:
+                poiScore = cv2.pointPolygonTest(poiContours[0],position,True)
+            else:
+                poiScore = 'NA'
 
             filename = fr.data['originalFileName']
             filenameParsed = os.path.basename(filename)[:-5].split("-")
@@ -261,7 +320,7 @@ class FFiPySupport:
             timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
             deltaSeconds = (dt - firstFrameTimestamp).total_seconds()
 
-            dataString = '{}, {}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, position, filename)
+            dataString = '{}, {}, {}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, position, poiScore, filename)
 
             if outFile is not None:
                 outFile.write(dataString)
