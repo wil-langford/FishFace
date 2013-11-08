@@ -363,6 +363,24 @@ It has two main attributes:
         else:
             print "No contours found in this frame."
 
+    def applyResize(self, args=dict()):
+        """Resizes the image to the new shape provided."""
+
+        if 'newshape' not in args:
+            raise ImageProcessError("I need to know the new shape before I can resize.")
+
+        shp = args['newshape']
+
+        # save the last shape and the new shape for future reference
+        self.data['last_shape'] = self.data['shape']
+        self.data['new_shape'] = shp
+        self.data['spatialShape'] = tuple(shp)
+        self.ydim = self.data['spatialShape'][0]
+        self.xdim = self.data['spatialShape'][1]
+
+        self.setImage(cv2.resize(self.array, shp))
+
+
 # ##
 # ##  Drawing methods
 # ##
