@@ -275,13 +275,18 @@ class FFiPySupport:
 
         self.msg("Starting hopper chain.")
 
+        if poiContours is not None:
+            poiHeader = str(poiContours[0][0]).replace('\n','')
+        else:
+            poiHeader = "None"
+
         outFile = None
         if outFilenamePrefix is not None:
             bareDirName = os.path.basename(experimentDir)
             outFilename = "{}_{}_analysis-run-at-{}.csv".format(outFilenamePrefix, bareDirName, self.dtg())
             outFile = open(os.path.join(experimentDir, outFilename), 'w')
-            outFile.write(
-                ','.join([
+            outFile.write('"' +
+                '", "'.join([
                     "Data Series",
                     "Serial Number",
                     "Timestamp",
@@ -289,9 +294,9 @@ class FFiPySupport:
                     "Angle",
                     "Voltage",
                     "Position",
-                    "POI Score",
+                    "POI Score (POI {})".format(poiHeader),
                     "Original Filename"
-                ]) + "\n"
+                ]) + "\"\n"
             )
 
         self.msg("One dot will print per image processed. (10 dots per group, 10 groups per line.)")
