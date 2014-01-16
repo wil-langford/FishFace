@@ -31,11 +31,15 @@ This object provides IDS-specific camera interface features.
     def __init__(self, lightType=None):
         self.cam = ueye.Cam()
 
+        self.resetToDefault()
+
         if lightType == 'visible':
-            self.resetToDefault()
             self.setColorCorrection()
-            self.setColorMode()
-            self.setHardwareGain()
+            self.setColorMode(mode=ueye.CM_MONO8)
+            self.camPixClock = self.cam.SetPixelClock(25)
+            self.camFrameRate = self.cam.SetFrameRate(6)
+            self.exposureTime = self.cam.SetExposureTime(130)
+            self.setHardwareGain(30)
 
         if lightType == 'IR' or lightType is None:
             self.setColorCorrection()
