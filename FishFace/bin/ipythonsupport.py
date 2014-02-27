@@ -293,7 +293,8 @@ class FFiPySupport:
                     "Seconds Since Series Start",
                     "Angle",
                     "Voltage",
-                    "Position",
+                    "PositionX",
+                    "PositionY",
                     "POI Score (POI {})".format(poiHeader),
                     "Original Filename"
                 ]) + "\"\n"
@@ -325,7 +326,7 @@ class FFiPySupport:
             timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
             deltaSeconds = (dt - firstFrameTimestamp).total_seconds()
 
-            dataString = '{}, {}, {}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, position, poiScore, filename)
+            dataString = '{}, {}, {}, {}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, position[0], position[1], poiScore, filename)
 
             if outFile is not None:
                 outFile.write(dataString)
