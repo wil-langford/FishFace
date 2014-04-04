@@ -27,7 +27,7 @@ class FFiPySupport:
             'OK': '[\x1b[32mOK\x1b[0m]'
         }
 
-    DATE_FORMAT = "%Y-%m-%d-%H%M%S"
+    DATE_FORMAT = "%Y.%m.%d %H.%M.%S"
 
     def __init__(self):
         self.flag = self.INFO
@@ -59,6 +59,24 @@ class FFiPySupport:
 
     def reset(self):
         self.flag = self.INFO
+
+    def experimentName(self, species=None, fishID=None, treatment=None):
+        if species is None:
+            species = "HP"
+        if treatment is None:
+            treatment = "NT"
+        if fishID is None:
+            timestamp = time.time()
+
+            dt = datetime.datetime.fromtimestamp(timestamp)
+
+            fishID = dt.strftime("ID%Y%m%d%H%M")
+            self.msg("Using new fish ID: {}".format(fishID), self.WARN)
+        else:
+            self.msg("Using existing fish ID: {}".format(fishID))
+
+
+        return "{} {} {}".format(species, fishID, treatment)
 
     def ephemeraDirectory(self):
 
@@ -283,7 +301,7 @@ class FFiPySupport:
         outFile = None
         if outFilenamePrefix is not None:
             bareDirName = os.path.basename(experimentDir)
-            outFilename = "{}_{}_analysis-run-at-{}.csv".format(outFilenamePrefix, bareDirName, self.dtg())
+            outFilename = "{} {} run at {}.csv".format(outFilenamePrefix, bareDirName, self.dtg())
             outFile = open(os.path.join(experimentDir, outFilename), 'w')
             outFile.write('"' +
                 '", "'.join([
