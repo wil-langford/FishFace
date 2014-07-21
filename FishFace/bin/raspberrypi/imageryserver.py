@@ -11,6 +11,7 @@ import Pyro4
 import threading
 import time
 import io
+import numpy as np
 
 Pyro4.config.HOST = '10.0.0.228'
 Pyro4.config.SERIALIZER = 'pickle'
@@ -48,7 +49,7 @@ class ImageryServer(object):
                                 format='jpeg'
             )
 
-        data = stream.getvalue()
+        data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         self._current_frame = data
 
     def get_current_frame(self):
@@ -76,7 +77,10 @@ class ImageryServer(object):
     def run(self):
         def image_capture_loop():
             while True:
+
+                print "capturing new frame",
                 self._capture_new_current_frame()
+                print "...captured new frame"
                 time.sleep(1)
 
         thread = threading.Thread(target=image_capture_loop)
