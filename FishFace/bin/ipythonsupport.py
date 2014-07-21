@@ -3,7 +3,8 @@ import os
 import shutil
 import datetime
 import time
-import datetime
+import numpy as np
+import cv2
 
 sys.path.append(os.path.join('..','fishface'))
 import capture, imageframe, hopper, poser
@@ -26,12 +27,14 @@ class FFiPySupport:
             'OK': '[\x1b[32mOK\x1b[0m]'
         }
 
-    DATE_FORMAT = "%Y-%m-%d-%H%M%S"
+    DATE_FORMAT = "%Y.%m.%d %H.%M.%S"
 
     def __init__(self):
         self.flag = self.INFO
         self.lastSeriesTimestamp = None
         self.wakeUpTimestamp = None
+
+        # This line enables DEBUG output.
         self.debug = False
 
     def msg(self, message, messageType=INFO):
@@ -56,6 +59,24 @@ class FFiPySupport:
 
     def reset(self):
         self.flag = self.INFO
+
+    def experimentName(self, species=None, fishID=None, treatment=None):
+        if species is None:
+            species = "HP"
+        if treatment is None:
+            treatment = "NT"
+        if fishID is None:
+            timestamp = time.time()
+
+            dt = datetime.datetime.fromtimestamp(timestamp)
+
+            fishID = dt.strftime("ID%Y%m%d%H%M")
+            self.msg("Using new fish ID: {}".format(fishID), self.WARN)
+        else:
+            self.msg("Using existing fish ID: {}".format(fishID))
+
+
+        return "{} {} {}".format(species, fishID, treatment)
 
     def ephemeraDirectory(self):
 
@@ -105,7 +126,7 @@ class FFiPySupport:
             del self.cam
 
 
-    def grabDataSeries(self, dataSeries, numData, expDir, dataPrefix, interval, lightType='IR'):
+    def grabDataSeries(self, dataSeries, numData, expDir, dataPrefix, interval, voltage, lightType='IR'):
         self.msg("Capturing {} data points at {} second intervals.".format(numData, interval))
         self.msg("Accessing camera.")
         self.cam = capture.Camera(lightType=lightType)
@@ -130,7 +151,7 @@ class FFiPySupport:
                 self.wakeUpAt(now + interval)
             self.lastSeriesTimestamp = now
 
-            dataFilename = os.path.join(expDir, "{}-{:03d}-{}-{:05d}.jpg".format(dataPrefix, dataSeries, self.dtg(), i))
+            dataFilename = os.path.join(expDir, "{}-{:03d}-{:05d}-{}-{:0.2f}V.jpg".format(dataPrefix, dataSeries, i, self.dtg(), voltage))
             self.grabImage(dataFilename)
             self.msg("Grabbed image number {}/{} in data series {}.".format(i, numData, dataSeries), self.DEBUG)
 
@@ -166,8 +187,63 @@ class FFiPySupport:
         for i, dir in enumerate(self.dataDirs):
             print "{}: {}".format(i,dir)
 
+    def renderPOI(self, expDirIdx, calPrefix, POI=0):
+        experimentDir = self.dataDirs[expDirIdx]
+        print experimentDir
+        if not os.path.exists(experimentDir):
+            self.msg("Selected experiment directory does not exist.", self.ERR)
+            return
 
-    def analyzeExperiment(self, expDirIdx, calPrefix, dataPrefix, threshold, outFilename=None):
+        try:
+            root, dirs, files = os.walk(experimentDir).next()
+        except StopIteration:
+                pass
+
+        calFiles = [filename for filename in files if filename[:len(calPrefix)] == calPrefix]
+        if len(calFiles) == 0:
+            self.msg("Could not find a calibration file with the given prefix: {}".format(calPrefix), self.ERR)
+            return
+        elif len(calFiles) > 1:
+            self.msg(
+                "Found too many calibration files with prefix: " +
+                "{}\nDelete (or rename without the '{}' prefix) all but the one you want to use to proceed.".format(calPrefix,calPrefix),
+                self.ERR)
+            return
+        else:
+            calFile = os.path.join(root,calFiles[0])
+            cf = imageframe.Frame(calFile)
+            self.msg("Using discovered calibration file: {}".format(calFile))
+
+            if POI != 0:
+                if len(POI) < 2:
+                    self.msg("POI needs to be 0 or a list of points. If it's a list of points, there must be at least 2 points in the list.", self.ERR)
+                elif len(POI)==2:
+                    POI.append( [POI[0][0], POI[1][1]])
+                    POI.insert(1, [POI[1][0], POI[0][1]])
+
+                ctrs = np.array([[POI]])
+
+                cf.drawContours({
+                    "contours": ctrs,
+                    "filledIn": False,
+                    "lineThickness": 8
+                })
+            else:
+                ctrs = None
+
+            displayShape = (640,480)
+            cf.applyResize({
+                "newshape": displayShape
+            })
+
+            outFilename = os.path.join(root,"POI-image.jpg")
+            cf.saveImageToFile(outFilename)
+
+            return [outFilename, ctrs]
+
+        return [None, None]
+
+    def analyzeExperiment(self, expDirIdx, calPrefix, dataPrefix, threshold, outFilenamePrefix=None, poiContours=None):
         experimentDir = self.dataDirs[expDirIdx]
         print experimentDir
         if not os.path.exists(experimentDir):
@@ -200,7 +276,7 @@ class FFiPySupport:
                             if filename[:len(dataPrefix)] == dataPrefix])
         dataFiles.insert(0,"ACTUAL")
 
-        self.msg("Found {} data files to process.".format(len(dataFiles)))
+        self.msg("Found {} data files to process.".format(len(dataFiles)-1))
 
         chainProcessList = [
             ('deltaImage', {'calImageFrame': calFrame}),
@@ -208,7 +284,8 @@ class FFiPySupport:
             ('threshold', {'threshold': threshold}),
             ('closing', {'kernelRadius': 3}),
             ('opening', {'kernelRadius': 3}),
-            ('cropToLargestBlob', {})
+            ('cropToLargestBlob', {}),
+            ('findCentroid', {})
         ]
 
         self.msg("Building hopper chain.")
@@ -216,41 +293,66 @@ class FFiPySupport:
 
         self.msg("Starting hopper chain.")
 
+        if poiContours is not None:
+            poiHeader = str(poiContours[0][0]).replace('\n','')
+        else:
+            poiHeader = "None"
+
         outFile = None
-        if outFilename is not None:
+        if outFilenamePrefix is not None:
+            bareDirName = os.path.basename(experimentDir)
+            outFilename = "{} {} run at {}.csv".format(outFilenamePrefix, bareDirName, self.dtg())
             outFile = open(os.path.join(experimentDir, outFilename), 'w')
-            outFile.write(
-                ','.join([
+            outFile.write('"' +
+                '", "'.join([
                     "Data Series",
+                    "Serial Number",
                     "Timestamp",
-                    "Serial number within series",
+                    "Seconds Since Series Start",
                     "Angle",
+                    "Voltage",
+                    "PositionX",
+                    "PositionY",
+                    "POI Score (POI {})".format(poiHeader),
                     "Original Filename"
-                ]) + "\n"
+                ]) + "\"\n"
             )
 
         self.msg("One dot will print per image processed. (10 dots per group, 10 groups per line.)")
         i = 0
         startProcessingTimestamp = time.time()
 
+        firstFrameTimestamp = None
+
         for fr in HC:
+
             po = poser.Poser(fr.array)
             angle = po.findLongAxis()
+            position = fr.data['absoluteCentroid']
+            if poiContours is not None:
+                poiScore = cv2.pointPolygonTest(poiContours[0],position,True)
+            else:
+                poiScore = 'NA'
 
             filename = fr.data['originalFileName']
-            filenameParsed = os.path.basename(filename)[:-4].split("-")
+            filenameParsed = os.path.basename(filename)[:-5].split("-")
 
-            prefix, series, year, month, day, timeString, serial = filenameParsed
-            dt = self.dtgRead('-'.join(filenameParsed[2:6]))
+            prefix, series, serial, year, month, day, timeString, voltage = filenameParsed
+            dt = self.dtgRead('-'.join(filenameParsed[3:7]))
+            if firstFrameTimestamp is None:
+                firstFrameTimestamp = dt
             timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
+            deltaSeconds = (dt - firstFrameTimestamp).total_seconds()
 
-            self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename), self.DEBUG)
+            dataString = '{}, {}, {}, {}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, position[0], position[1], poiScore, filename)
 
             if outFile is not None:
-                outFile.write('{}, {}, {}, {}, "{}"\n'.format(series, timestamp, serial, angle, filename))
-                self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename), self.DEBUG)
+                outFile.write(dataString)
+                messageTarget = self.DEBUG
             else:
-                self.msg('{}, {}, {}, {}, "{}"'.format(series, timestamp, serial, angle, filename))
+                messageTarget = self.INFO
+
+            self.msg(dataString, messageTarget)
 
             self.msg('.', self.WRITE)
 

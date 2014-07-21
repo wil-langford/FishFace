@@ -5,6 +5,7 @@
 import imageframe
 import os
 import glob
+import time
 
 
 class HopperChain:
@@ -99,6 +100,8 @@ class Hopper:
         self.fillFromListOfFilenames(filenameList, directory=directory)
 
     def __init__(self, origInput, directory="./"):
+        self.debug = False
+
         self.origInput = origInput
         if type(origInput) == list:
             if (origInput[0] == 'ACTUAL'):
@@ -139,6 +142,11 @@ class Hopper:
             self.parentHopper.cur = self.cur - 1
             self.frame = self.parentHopper.next()
             self.processFrame()
+            if self.debug:
+                originalFilename = self.frame.data['originalFileName'][:-4]
+                debugTimestamp = time.time()
+                debugFilename = "{}-{:5f}.jpg".format(originalFilename, debugTimestamp).replace("DATA", "DEBUG")
+                self.frame.saveImageToFile(debugFilename)
         else:
             try:
                 self.frame = imageframe.Frame(self.contents[self.cur])

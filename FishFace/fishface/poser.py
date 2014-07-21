@@ -137,7 +137,9 @@ class Poser:
 
         # The actual angle of the fish is the inverse of the candidate,
         # because we rotated the whole array and then measured along one axis.
-        return int((-candidate) % 360)
+        # This is tuned to spit out values in the half-open interval [-180,180),
+        # where 0 is toward the right side of the image.
+        return int((-candidate) % 360) - 180
 
     def _rotate(self, degrees):
         """Use the scipy image rotation method on my array."""
