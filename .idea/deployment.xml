@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="raspi_old_ff">
+    <serverData>
+      <paths name="raspi_old_ff">
+        <serverdata>
+          <mappings>
+            <mapping deploy="$PROJECT_DIR$/../../../pi/old_fishface" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
+
