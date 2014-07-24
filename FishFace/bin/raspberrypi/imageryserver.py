@@ -54,6 +54,7 @@ class ImageryServer(object):
 
     def get_current_frame(self):
         return self._current_frame
+        print "Served frame."
 
     def awb_mode(self, mode=None):
         if mode is None:
@@ -78,9 +79,7 @@ class ImageryServer(object):
         def image_capture_loop():
             while True:
 
-                print "capturing new frame",
                 self._capture_new_current_frame()
-                print "...captured new frame"
                 time.sleep(1)
 
         thread = threading.Thread(target=image_capture_loop)
