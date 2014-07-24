@@ -13,7 +13,7 @@ import time
 import io
 import numpy as np
 
-Pyro4.config.HOST = '10.0.0.228'
+Pyro4.config.HOST = 'mystaticip'
 Pyro4.config.SERIALIZER = 'pickle'
 Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
 
@@ -21,10 +21,9 @@ class ImageryServer(object):
     """
     """
 
-    def __init__(self, ids_res=True):
+    def __init__(self):
         self.camera = picamera.PiCamera()
-
-        self.ids_res = ids_res
+        self.camera.resolution = (2048,1536)
 
         self.pyro_daemon = Pyro4.Daemon()
         self.pyro_uri = self.pyro_daemon.register(self)
@@ -37,17 +36,10 @@ class ImageryServer(object):
     def _capture_new_current_frame(self):
         stream = io.BytesIO()
 
-        if self.ids_res:
-            self.camera.capture(
-                                stream,
-                                format='jpeg',
-                                resize=(2048,1536)
-            )
-        else:
-            self.camera.capture(
-                                stream,
-                                format='jpeg'
-            )
+        self.camera.capture(
+                            stream,
+                            format='jpeg'
+        )
 
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         self._current_frame = data
