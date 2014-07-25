@@ -27,7 +27,7 @@ class FFiPySupport:
             'OK': '[\x1b[32mOK\x1b[0m]'
         }
 
-    DATE_FORMAT = "%Y.%m.%d %H.%M.%S"
+    DATE_FORMAT = "%Y-%m-%d-%H.%M.%S"
 
     def __init__(self):
         self.flag = self.INFO
