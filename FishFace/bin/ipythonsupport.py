@@ -106,7 +106,6 @@ class FFiPySupport:
     def dtgRead(self, string):
         return datetime.datetime.strptime(string, self.DATE_FORMAT)
 
-
     def grabImage(self, filename, isCal=False, lightType='IR'):
         if isCal:
             try:
@@ -197,7 +196,7 @@ class FFiPySupport:
         try:
             root, dirs, files = os.walk(experimentDir).next()
         except StopIteration:
-                pass
+            pass
 
         calFiles = [filename for filename in files if filename[:len(calPrefix)] == calPrefix]
         if len(calFiles) == 0:
@@ -341,7 +340,7 @@ class FFiPySupport:
             dt = self.dtgRead('-'.join(filenameParsed[3:7]))
             if firstFrameTimestamp is None:
                 firstFrameTimestamp = dt
-            timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = dt.strftime("%Y-%m-%d-%H%M%S")
             deltaSeconds = (dt - firstFrameTimestamp).total_seconds()
 
             dataString = '{}, {}, {}, {}, {}, {}, {}, {}, {}, "{}"\n'.format(series, serial, timestamp, deltaSeconds, angle, voltage, position[0], position[1], poiScore, filename)
