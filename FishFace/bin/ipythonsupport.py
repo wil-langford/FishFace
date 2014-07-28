@@ -109,11 +109,11 @@ class FFiPySupport:
     def grabImage(self, filename, isCal=False, lightType='IR'):
         if isCal:
             try:
-                if os.path.exists(self.oldCalFilename):
-                    os.remove(self.oldCalFilename)
-                self.oldCalFilename = filename
-            except:
+                os.remove(self.oldCalFilename)
+            except AttributeError:
                 pass
+
+        self.oldCalFilename = filename
 
         try:
             frame = imageframe.Frame(self.cam.grabFrame())
@@ -123,6 +123,7 @@ class FFiPySupport:
             frame = imageframe.Frame(self.cam.grabFrame())
             frame.saveImageToFile(filename)
             del self.cam
+
 
 
     def grabDataSeries(self, dataSeries, numData, expDir, dataPrefix, interval, voltage, lightType='IR'):
