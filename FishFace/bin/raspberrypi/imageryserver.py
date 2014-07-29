@@ -24,6 +24,7 @@ class ImageryServer(object):
     def __init__(self):
         self.camera = picamera.PiCamera()
         self.camera.resolution = (2048,1536)
+        self.camera.rotation = 180
 
         self.pyro_daemon = Pyro4.Daemon()
         self.pyro_uri = self.pyro_daemon.register(self)
